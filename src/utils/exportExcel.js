@@ -34,7 +34,7 @@ export function exportToExcel(activities, periodLabel) {
 
   // Section 1: Kegiatan
   if (kegiatanRows.length > 0) {
-    wsRows.push(['KERJAAN SEMINGGU SEBELUMNYA'])
+    wsRows.push(['AKTIVITAS SEMINGGU SEBELUMNYA'])
     wsRows.push(['No', 'Kegiatan', 'Kontributor'])
     kegiatanRows.forEach(row => {
       wsRows.push([row.No, row.Uraian, row.Kontributor])
@@ -88,7 +88,7 @@ export function exportToExcel(activities, periodLabel) {
         ws[cell].s.border = getBorder()
       } 
       // If it's a section title
-      else if (ws[cell].v === 'KERJAAN SEMINGGU SEBELUMNYA' || ws[cell].v === 'TARGET MINGGU DEPAN') {
+      else if (ws[cell].v === 'AKTIVITAS SEMINGGU SEBELUMNYA' || ws[cell].v === 'TARGET MINGGU DEPAN') {
         ws[cell].s.font.bold = true
         ws[cell].s.font.color = { rgb: '16A34A' }
       }

@@ -89,7 +89,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
   if (groupedActivities.length > 0) {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(11)
-    doc.text('Kerjaan Seminggu Sebelumnya', margin, y)
+    doc.text('Aktivitas Seminggu Sebelumnya', margin, y)
     y += 4
 
     const kegiatanData = groupedActivities.map((item, idx) => [

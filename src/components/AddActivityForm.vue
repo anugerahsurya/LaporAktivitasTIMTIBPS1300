@@ -28,7 +28,7 @@
       <div v-if="selectedEmployee" class="animate-fade-in-up">
         <!-- Section: Kegiatan Minggu Lalu -->
         <div class="section-container">
-          <h3 class="section-title">Kerjaan Seminggu Sebelumnya</h3>
+          <h3 class="section-title">Aktivitas Seminggu Sebelumnya</h3>
           <div class="add-form__activities">
             <div
               v-for="(activity, idx) in pastActivities"

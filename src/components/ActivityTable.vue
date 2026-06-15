@@ -12,10 +12,10 @@
       <p>Belum ada kegiatan atau target yang tercatat untuk periode ini. Klik tombol "Isi Kegiatan" untuk menambahkan.</p>
     </div>
 
-    <div v-else>
+    <div v-else class="activity-sections">
       <!-- Tabel Kegiatan Minggu Ini -->
       <div v-if="groupedActivities.length > 0" class="table-section">
-        <h3 class="section-title">Kerjaan Seminggu Sebelumnya</h3>
+        <h3 class="section-title">Aktivitas Seminggu Sebelumnya</h3>
         <div class="table-wrapper">
           <table>
             <thead>
@@ -149,6 +149,9 @@ const groupedTargets = computed(() => {
 <style scoped>
 .activity-table {
   margin-top: var(--space-4);
+}
+
+.activity-sections {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
