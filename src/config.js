@@ -1,0 +1,122 @@
+/**
+ * ========================================================
+ *  KONFIGURASI APLIKASI LAPOR AKTIVITAS TIM TI
+ * ========================================================
+ *
+ *  File ini adalah satu-satunya file yang perlu diedit
+ *  untuk mengkustomisasi warna, daftar pegawai, dan
+ *  informasi tim.
+ *
+ *  ► Untuk mengganti warna  → edit object `colors`
+ *  ► Untuk menambah pegawai → tambah entry di `employees`
+ *  ► Untuk ganti info tim   → edit object `team`
+ */
+
+export const config = {
+  // ═══════════════════════════════════════════════════════
+  //  WARNA TEMA
+  // ═══════════════════════════════════════════════════════
+  colors: {
+    light: {
+      primary: '#16a34a',
+      primaryHover: '#15803d',
+      primaryLight: '#dcfce7',
+      primaryLighter: '#f0fdf4',
+      secondary: '#ffffff',
+      background: '#f8fafb',
+      surface: '#ffffff',
+      surfaceHover: '#f0fdf4',
+      text: '#1e293b',
+      textSecondary: '#64748b',
+      textMuted: '#94a3b8',
+      border: '#e2e8f0',
+      borderLight: '#f1f5f9',
+      success: '#16a34a',
+      successLight: '#dcfce7',
+      danger: '#ef4444',
+      dangerLight: '#fef2f2',
+      warning: '#f59e0b',
+      warningLight: '#fffbeb',
+      accent: '#059669',
+      shadow: 'rgba(0, 0, 0, 0.08)',
+      shadowHeavy: 'rgba(0, 0, 0, 0.15)',
+      overlay: 'rgba(0, 0, 0, 0.4)',
+      gradient1: '#16a34a',
+      gradient2: '#059669',
+      gradient3: '#047857',
+    },
+    dark: {
+      primary: '#22c55e',
+      primaryHover: '#4ade80',
+      primaryLight: '#14532d',
+      primaryLighter: '#0a1f12',
+      secondary: '#1e1e2e',
+      background: '#0b1120',
+      surface: '#141c2e',
+      surfaceHover: '#1a2740',
+      text: '#e2e8f0',
+      textSecondary: '#94a3b8',
+      textMuted: '#64748b',
+      border: '#1e3a4a',
+      borderLight: '#172236',
+      success: '#22c55e',
+      successLight: '#14532d',
+      danger: '#f87171',
+      dangerLight: '#451a1a',
+      warning: '#fbbf24',
+      warningLight: '#422006',
+      accent: '#34d399',
+      shadow: 'rgba(0, 0, 0, 0.3)',
+      shadowHeavy: 'rgba(0, 0, 0, 0.5)',
+      overlay: 'rgba(0, 0, 0, 0.6)',
+      gradient1: '#22c55e',
+      gradient2: '#059669',
+      gradient3: '#047857',
+    },
+  },
+
+  // ═══════════════════════════════════════════════════════
+  //  DAFTAR PEGAWAI TIM TI
+  // ═══════════════════════════════════════════════════════
+  employees: [
+    { id: 1, name: 'Ihsan Pratama', role: 'Anggota' },
+    { id: 2, name: 'Muhammad Hanif Bahar', role: 'Anggota' },
+    { id: 3, name: 'Tri Hayuni Syardi', role: 'Anggota' },
+    { id: 4, name: 'Ryche Pranita', role: 'Anggota' },
+    { id: 5, name: 'Benny Firmansyah', role: 'Anggota' },
+    { id: 6, name: 'Hardini Juliarti', role: 'Anggota' },
+    { id: 7, name: 'Hamdi Rafiqi', role: 'Anggota' },
+    { id: 8, name: 'Ryan Oktarino', role: 'Anggota' },
+    { id: 9, name: 'M. Hafiz Al Ihsan', role: 'Anggota' },
+    { id: 10, name: 'Giani Jovita Jane', role: 'Anggota' },
+    { id: 11, name: 'Anugerah Surya Atmaja', role: 'Anggota' },
+  ],
+
+  // ═══════════════════════════════════════════════════════
+  //  INFORMASI TIM
+  // ═══════════════════════════════════════════════════════
+  team: {
+    name: 'Tim Teknologi Informasi',
+    institution: 'BPS Provinsi Sumatera Barat',
+    code: '1300',
+    leader: 'Aan Subrata',
+    fullTitle: 'Laporan Aktivitas Mingguan Tim Teknologi Informasi',
+    subtitle: 'BPS Provinsi Sumatera Barat',
+  },
+
+  // ═══════════════════════════════════════════════════════
+  //  KONFIGURASI EXPORT
+  // ═══════════════════════════════════════════════════════
+  export: {
+    headerColor: '16a34a',   // Warna header Excel (hex tanpa #)
+    fontFamily: 'Cambria',   // Font untuk laporan PDF
+    fontSize: 11,            // Ukuran font body PDF
+    titleFontSize: 14,       // Ukuran font judul PDF
+  },
+
+  // ═══════════════════════════════════════════════════════
+  //  URL GOOGLE APPS SCRIPT & API KEYS (Dari file .env)
+  // ═══════════════════════════════════════════════════════
+  apiUrl: import.meta.env.VITE_API_URL || '',
+  geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
+}

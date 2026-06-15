@@ -1,0 +1,397 @@
+# Lapor Aktivitas TIM TI BPS Provinsi Sumatera Barat
+
+Website pelaporan aktivitas mingguan Tim TI BPS Provinsi Sumatera Barat, dibangun dengan Vue.js dan terintegrasi Google Sheets sebagai database.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Gemini API Key** yang diberikan akan disimpan di file `.env` dan hanya digunakan di sisi server (proxy via Apps Script) untuk generate summary laporan. Key tidak akan terekspos di client-side.
+
+> [!IMPORTANT]
+> **Struktur Spreadsheet** — Saya akan mendesain kolom-kolom yang diperlukan. Anda perlu membuat sheet di spreadsheet yang sudah ada sesuai instruksi yang akan diberikan.
+
+> [!WARNING]
+> **Nama pegawai dan warna** akan disimpan di file konfigurasi lokal (`config.js`). Perubahan nama pegawai memerlukan rebuild/redeploy karena file ini di-bundle bersama aplikasi. Alternatifnya, data pegawai bisa disimpan di sheet terpisah di Google Sheets agar bisa diubah tanpa rebuild. **Mana yang Anda prefer?**
+
+## Open Questions
+
+1. **Daftar Nama Pegawai** — Bisa tolong berikan daftar nama lengkap anggota Tim TI yang akan dimasukkan ke konfigurasi awal?
+2. **Nama Ketua Tim** — Siapa ketua Tim TI yang akan dicantumkan di laporan PDF?
+3. **Template Header/Footer PDF** — Anda menyebut akan menyediakan template desain atas-bawah halaman. Apakah sudah ada file gambarnya? Jika belum, saya bisa buatkan desain default terlebih dahulu.
+4. **Hosting** — Apakah website ini akan di-deploy di suatu hosting (GitHub Pages, Netlify, dsb.) atau hanya dijalankan lokal?
+5. **Target Minggu Depan** — Apakah "target minggu depan" diisi bersamaan dengan "kegiatan minggu ini", atau diisi terpisah?
+
+---
+
+## Arsitektur Sistem
+
+```mermaid
+graph TB
+    subgraph "Frontend (Vue.js + Vite)"
+        A[Halaman Home<br/>Tabel Aktivitas] --> B[Form Isi Kegiatan]
+        A --> C[Halaman Riwayat<br/>Periode Lain]
+        A --> D[Export Excel/PDF]
+    end
+
+    subgraph "Backend (Google Apps Script)"
+        E[Web App API]
+        E --> F[GET /activities]
+        E --> G[POST /activity]
+        E --> H[GET /periods]
+        E --> I[POST /generate-summary]
+    end
+
+    subgraph "Database (Google Sheets)"
+        J[Sheet: Aktivitas]
+        K[Sheet: Pegawai - opsional]
+    end
+
+    subgraph "External"
+        L[Gemini API]
+    end
+
+    A <-->|fetch| E
+    B -->|submit| G
+    D -->|request summary| I
+    I -->|API call| L
+    E <--> J
+    E <--> K
+```
+
+---
+
+## Proposed Changes
+
+### 1. Project Setup (Vite + Vue 3)
+
+Inisialisasi proyek Vue 3 menggunakan Vite di workspace directory.
+
+**Teknologi:**
+- Vue 3 (Composition API)
+- Vue Router (navigasi halaman)
+- Vite (build tool)
+- SheetJS (xlsx) — export Excel
+- jsPDF + jsPDF-AutoTable — export PDF
+- Google Fonts: Inter (UI), Cambria (laporan PDF)
+
+---
+
+### 2. File Konfigurasi
+
+#### [NEW] [config.js](file:///d:/BPS/2.%20IPDS/11.%20Lapor%20Aktivitas%20Tim%20TI/src/config.js)
+
+File konfigurasi terpusat untuk warna dan daftar pegawai:
+
+```javascript
+export const config = {
+  // === WARNA TEMA ===
+  colors: {
+    light: {
+      primary: '#16a34a',        // Hijau utama
+      primaryDark: '#15803d',    // Hijau gelap (hover)
+      primaryLight: '#bbf7d0',   // Hijau muda (background)
+      secondary: '#ffffff',      // Putih
+      background: '#f0fdf4',     // Hijau sangat muda
+      surface: '#ffffff',        // Putih card
+      text: '#1e293b',           // Teks utama
+      textSecondary: '#64748b',  // Teks sekunder
+      border: '#e2e8f0',        // Border
+      success: '#16a34a',       // Status sudah isi
+      danger: '#ef4444',        // Status belum isi
+      accent: '#059669',        // Aksen
+    },
+    dark: {
+      primary: '#22c55e',
+      primaryDark: '#16a34a',
+      primaryLight: '#14532d',
+      secondary: '#1e1e2e',
+      background: '#0f172a',
+      surface: '#1e293b',
+      text: '#f1f5f9',
+      textSecondary: '#94a3b8',
+      border: '#334155',
+      success: '#22c55e',
+      danger: '#f87171',
+      accent: '#34d399',
+    }
+  },
+
+  // === DAFTAR PEGAWAI ===
+  employees: [
+    { id: 1, name: 'Nama Pegawai 1', role: 'Ketua Tim' },
+    { id: 2, name: 'Nama Pegawai 2', role: 'Anggota' },
+    { id: 3, name: 'Nama Pegawai 3', role: 'Anggota' },
+    { id: 4, name: 'Nama Pegawai 4', role: 'Anggota' },
+    // Tambahkan pegawai baru di sini
+  ],
+
+  // === KONFIGURASI TIM ===
+  team: {
+    name: 'Tim Teknologi Informasi',
+    institution: 'BPS Provinsi Sumatera Barat',
+    code: '1300',
+    leader: 'Nama Ketua Tim',  // Ganti dengan nama ketua
+  },
+
+  // === KONFIGURASI EXPORT ===
+  export: {
+    headerColor: '#16a34a',  // Warna header tabel Excel
+    fontFamily: 'Cambria',   // Font laporan PDF
+  },
+
+  // === APPS SCRIPT URL ===
+  apiUrl: 'YOUR_APPS_SCRIPT_WEB_APP_URL',
+};
+```
+
+> Untuk mengganti warna, cukup edit object `colors`. Untuk menambah pegawai baru, tambahkan entry di array `employees`.
+
+---
+
+### 3. Struktur Halaman & Komponen
+
+#### Halaman
+
+| Route | Halaman | Deskripsi |
+|-------|---------|-----------|
+| `/` | **Home** | Tabel aktivitas minggu berjalan, tombol isi kegiatan, status pengisian, export |
+| `/add` | **Tambah Kegiatan** | Form pilih pegawai, isi kegiatan dengan autocomplete/suggest |
+| `/history` | **Riwayat** | Navigasi ke periode-periode sebelumnya |
+
+#### Komponen Utama
+
+| Komponen | Fungsi |
+|----------|--------|
+| `AppHeader.vue` | Header dengan logo, judul, toggle dark mode |
+| `ActivityTable.vue` | Tabel daftar kegiatan + kolom status pengisian pegawai |
+| `PeriodSelector.vue` | Navigasi antar periode (minggu) |
+| `AddActivityForm.vue` | Form pengisian kegiatan dengan suggest |
+| `EmployeeStatus.vue` | Badge status hijau/merah per pegawai |
+| `ExportButtons.vue` | Tombol export Excel & PDF |
+| `ThemeToggle.vue` | Toggle dark/light mode |
+
+---
+
+### 4. Logika Periode Mingguan
+
+```
+Periode anchored ke hari Minggu.
+Contoh: Minggu, 14 Juni 2026 → Periode "14 Juni 2026"
+
+Pengisian dibuka: Selasa s/d Senin berikutnya
+  → 16 Juni 2026 (Selasa) s/d 22 Juni 2026 (Senin)
+
+Kegiatan di periode ini = rekap aktivitas yang dilakukan
+  di minggu 8-14 Juni 2026.
+```
+
+**Implementasi:**
+- Hitung tanggal Minggu terakhir yang sudah lewat → jadi anchor periode
+- Tampilkan range pengisian (Selasa-Senin)
+- Validasi bahwa pengisian hanya bisa dilakukan dalam range tersebut
+
+---
+
+### 5. Tabel Aktivitas (Home)
+
+**Struktur Tabel:**
+
+| No | Kegiatan | Target Minggu Depan | Pengisi |
+|----|----------|---------------------|---------|
+| 1 | Maintenance server | Update firewall | 🟩 Ahmad 🟥 Budi 🟩 Citra ... |
+| 2 | Rapat koordinasi | Follow-up notulen | 🟩 Ahmad 🟩 Budi 🟥 Citra ... |
+
+**Kolom Pengisi:**
+- Menampilkan semua nama pegawai
+- **Hijau** (✅) = sudah menambahkan kegiatan di periode ini
+- **Merah** (❌) = belum menambahkan kegiatan
+- Ini bukan per-baris, melainkan status global: apakah pegawai X sudah submit minimal 1 kegiatan di minggu ini
+
+**Fitur di atas tabel:**
+- Tombol **"+ Isi Kegiatan"** → navigasi ke `/add`
+- **Period selector** → navigasi ke halaman riwayat
+
+**Fitur di bawah tabel:**
+- Tombol **"Export Excel"**
+- Tombol **"Export PDF"**
+
+---
+
+### 6. Form Isi Kegiatan (`/add`)
+
+**Flow:**
+1. Pilih nama pegawai (dropdown dari `config.employees`)
+2. Isi kegiatan:
+   - Text input dengan **autocomplete/suggest** dari kegiatan yang sudah ada di minggu yang sama
+   - Ini mencegah duplikasi kegiatan yang sama
+   - Jika kegiatan sudah ada → pegawai di-append ke kegiatan tersebut
+   - Jika kegiatan baru → buat entry baru di tabel
+3. Isi target minggu depan (opsional per kegiatan)
+4. Tombol **"+ Tambah Kegiatan Lain"** → menambah field kegiatan baru
+5. Tombol **"Submit"** → kirim ke Apps Script → redirect ke Home
+
+**Logika Suggest:**
+- Saat mengetik, tampilkan dropdown kegiatan yang sudah terdaftar di periode yang sama
+- Jika user memilih kegiatan yang sudah ada, maka nama pegawai ditambahkan ke kegiatan tersebut (tidak membuat baris baru)
+
+---
+
+### 7. Export Excel
+
+Menggunakan library **SheetJS (xlsx)**:
+
+- Header berwarna hijau (sesuai `config.export.headerColor`)
+- Border penuh di semua sel
+- Kolom: No, Kegiatan Minggu Ini, Target Minggu Depan, Kontributor
+- Auto-width kolom
+- Nama file: `Laporan_Aktivitas_TIM_TI_{tanggal_periode}.xlsx`
+
+---
+
+### 8. Export PDF (Laporan)
+
+Menggunakan **jsPDF + jsPDF-AutoTable**:
+
+**Isi Laporan:**
+1. **Header** — Template desain atas halaman (gambar/dekorasi)
+2. **Judul**: "LAPORAN AKTIVITAS MINGGUAN TIM TEKNOLOGI INFORMASI"
+3. **Info**: Periode, Ketua Tim, Daftar Anggota
+4. **Narasi Summary** — Di-generate oleh Gemini API:
+   - Kirim daftar kegiatan ke Gemini via Apps Script
+   - Gemini generate paragraf narasi summary
+5. **Tabel Kegiatan** — No, Kegiatan, Target Minggu Depan
+6. **Footer** — Template desain bawah halaman
+
+**Format:**
+- Font: Cambria
+- Warna font: Hitam
+- Bold pada judul, header tabel, label
+- Tabel dengan border
+
+---
+
+### 9. Google Sheets — Struktur Database
+
+#### Sheet: `Aktivitas`
+
+| Kolom | Deskripsi | Contoh |
+|-------|-----------|--------|
+| `id` | ID unik (auto) | `ACT001` |
+| `periode` | Tanggal Minggu anchor | `2026-06-14` |
+| `kegiatan` | Nama kegiatan | `Maintenance server` |
+| `target_minggu_depan` | Target kegiatan | `Update firewall` |
+| `pegawai_id` | ID pegawai dari config | `1` |
+| `pegawai_nama` | Nama pegawai | `Ahmad` |
+| `created_at` | Timestamp pengisian | `2026-06-16T10:30:00` |
+
+> Satu baris = satu pengisian oleh satu pegawai untuk satu kegiatan.
+> Kegiatan yang sama (teks sama) di periode yang sama akan di-group di tabel tampilan.
+
+#### Sheet: `Pegawai` (Opsional)
+
+| Kolom | Deskripsi |
+|-------|-----------|
+| `id` | ID pegawai |
+| `nama` | Nama lengkap |
+| `role` | Jabatan/peran |
+| `active` | Aktif/nonaktif |
+
+---
+
+### 10. Google Apps Script
+
+#### [NEW] Apps Script Code
+
+Saya akan menyediakan kode lengkap Apps Script yang perlu di-upload ke spreadsheet, meliputi:
+
+**Endpoints:**
+
+| Method | Endpoint | Fungsi |
+|--------|----------|--------|
+| GET | `?action=getActivities&periode=2026-06-14` | Ambil kegiatan per periode |
+| GET | `?action=getPeriods` | Daftar semua periode yang ada |
+| GET | `?action=getSuggestions&periode=2026-06-14` | Ambil kegiatan yang sudah ada untuk suggest |
+| POST | `action=addActivity` | Tambah kegiatan baru |
+| POST | `action=generateSummary` | Generate AI summary via Gemini |
+
+**Flow Apps Script:**
+1. `doGet(e)` — Handle GET requests
+2. `doPost(e)` — Handle POST requests
+3. `getActivities(periode)` — Query sheet berdasarkan periode
+4. `addActivity(data)` — Insert row ke sheet
+5. `generateSummary(activities)` — Panggil Gemini API dan return summary
+
+---
+
+### 11. Struktur File Proyek
+
+```
+d:\BPS\2. IPDS\11. Lapor Aktivitas Tim TI\
+├── index.html
+├── package.json
+├── vite.config.js
+├── .env                          # API URL, dll
+├── src/
+│   ├── main.js                   # Entry point Vue
+│   ├── App.vue                   # Root component
+│   ├── config.js                 # ⭐ File konfigurasi warna & pegawai
+│   ├── router/
+│   │   └── index.js              # Vue Router setup
+│   ├── assets/
+│   │   └── styles/
+│   │       ├── variables.css     # CSS variables dari config
+│   │       ├── global.css        # Global styles
+│   │       └── animations.css    # Micro-animations
+│   ├── components/
+│   │   ├── AppHeader.vue
+│   │   ├── ActivityTable.vue
+│   │   ├── PeriodSelector.vue
+│   │   ├── EmployeeStatus.vue
+│   │   ├── AddActivityForm.vue
+│   │   ├── ExportButtons.vue
+│   │   └── ThemeToggle.vue
+│   ├── views/
+│   │   ├── HomeView.vue          # Halaman utama
+│   │   ├── AddActivityView.vue   # Halaman tambah kegiatan
+│   │   └── HistoryView.vue       # Halaman riwayat
+│   ├── composables/
+│   │   ├── useTheme.js           # Dark/light mode logic
+│   │   ├── usePeriod.js          # Logika perhitungan periode
+│   │   └── useApi.js             # API calls ke Apps Script
+│   └── utils/
+│       ├── exportExcel.js        # Logic export Excel
+│       ├── exportPdf.js          # Logic export PDF
+│       └── dateUtils.js          # Helper tanggal
+├── apps-script/
+│   ├── Code.gs                   # Main Apps Script
+│   ├── GeminiService.gs          # Gemini API integration
+│   └── README.md                 # Instruksi upload
+└── public/
+    ├── favicon.ico
+    └── templates/
+        ├── pdf-header.png        # Template header PDF
+        └── pdf-footer.png        # Template footer PDF
+```
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- `npm run build` — Pastikan build berhasil tanpa error
+- `npm run dev` — Jalankan dev server, verifikasi semua halaman
+
+### Manual Verification
+1. **Home Page** — Tabel tampil dengan benar, status pegawai hijau/merah
+2. **Add Activity** — Form berfungsi, suggest muncul, submit berhasil
+3. **Export Excel** — File xlsx terdownload, format rapi dengan border & header berwarna
+4. **Export PDF** — Laporan tergenerate dengan format yang benar, font Cambria
+5. **Dark Mode** — Toggle berfungsi, semua warna berubah sesuai tema
+6. **Apps Script** — Deploy dan test endpoint (setelah user upload ke spreadsheet)
+7. **AI Summary** — Narasi terbentuk dari Gemini API saat export PDF
+
+### Langkah Deploy Apps Script
+1. Buka spreadsheet → Extensions → Apps Script
+2. Copy-paste kode dari folder `apps-script/`
+3. Deploy sebagai Web App (access: Anyone)
+4. Copy URL → paste ke `config.js` → `apiUrl`
