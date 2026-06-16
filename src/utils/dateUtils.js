@@ -3,8 +3,11 @@
  *
  * Konvensi periode:
  * - Periode di-anchor ke hari Minggu.
- * - Pengisian dibuka dari Selasa s/d Senin minggu berikutnya.
- * - Contoh: Periode "14 Juni 2026" (Minggu) → isi mulai 16 Juni (Selasa) s/d 22 Juni (Senin).
+ * - Periode aktif dimulai Senin jam 12:00 s/d Senin jam 11:59 minggu berikutnya.
+ * - Contoh: Periode "14 Juni 2026" (Minggu) → aktif mulai 15 Juni (Senin) jam 12:00
+ *   s/d 22 Juni (Senin) jam 11:59.
+ * - getCurrentPeriod() menggunakan waktu sekarang (termasuk jam) untuk menentukan
+ *   periode mana yang sedang aktif.
  */
 
 const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
@@ -15,7 +18,7 @@ const BULAN = [
 
 /**
  * Mendapatkan tanggal Minggu terakhir yang sudah lewat (atau hari ini jika Minggu).
- * Ini digunakan sebagai anchor periode saat ini.
+ * Ini digunakan sebagai anchor periode.
  */
 export function getLastSunday(from = new Date()) {
   const d = new Date(from)
@@ -27,58 +30,78 @@ export function getLastSunday(from = new Date()) {
 }
 
 /**
- * Mendapatkan periode saat ini (Minggu anchor).
- * Jika hari ini Selasa-Sabtu, periode = Minggu kemarin.
- * Jika hari ini Minggu atau Senin, periode = Minggu lalu (minggu sebelumnya).
+ * Mendapatkan periode saat ini (Minggu anchor) berdasarkan waktu sekarang.
  *
- * Logika: pengisian dibuka Selasa-Senin.
- * Jadi jika hari ini Senin (22 Juni), masih mengisi periode 14 Juni.
- * Jika hari ini Selasa (16 Juni), mulai mengisi periode 14 Juni.
+ * Logika baru:
+ * - Periode aktif dimulai Senin jam 12:00 dan berakhir Senin berikutnya jam 11:59.
+ * - Jika sekarang hari Senin dan jam < 12:00, masih di periode sebelumnya.
+ * - Jika sekarang hari Senin dan jam >= 12:00, sudah masuk periode baru.
+ * - Selasa-Minggu: selalu di periode Minggu kemarin (Minggu yang baru lewat).
+ *
+ * Contoh:
+ * - Senin 15 Juni jam 11:00 → periode = Minggu 7 Juni (periode lama)
+ * - Senin 15 Juni jam 12:00 → periode = Minggu 14 Juni (periode baru)
+ * - Selasa 16 Juni jam 08:00 → periode = Minggu 14 Juni
+ * - Minggu 21 Juni jam 23:00 → periode = Minggu 14 Juni
  */
 export function getCurrentPeriod(from = new Date()) {
   const d = new Date(from)
-  d.setHours(0, 0, 0, 0)
-  const day = d.getDay()
+  const day = d.getDay()  // 0=Minggu, 1=Senin, ...
+  const hour = d.getHours()
 
-  // Jika Minggu (0) atau Senin (1): periode = Minggu 2 minggu lalu
-  // Jika Selasa-Sabtu (2-6): periode = Minggu kemarin
+  // Jika Senin sebelum jam 12:00 → masih periode sebelumnya
+  if (day === 1 && hour < 12) {
+    // Mundur ke Minggu kemarin → lalu mundur 7 hari lagi untuk dapat periode sebelumnya
+    const prev = new Date(d)
+    prev.setDate(prev.getDate() - 8) // Senin - 8 hari = Minggu sebelumnya
+    return getLastSunday(prev)
+  }
+
+  // Jika Senin jam >= 12:00 → periode baru (Minggu kemarin)
+  if (day === 1 && hour >= 12) {
+    const prev = new Date(d)
+    prev.setDate(prev.getDate() - 1) // Ke Minggu kemarin
+    return getLastSunday(prev)
+  }
+
+  // Minggu (0): periode = Minggu ini (hari ini sendiri)
   if (day === 0) {
-    // Hari Minggu: periode minggu lalu
-    d.setDate(d.getDate() - 7)
-    return getLastSunday(d)
-  } else if (day === 1) {
-    // Hari Senin: masih mengisi periode minggu lalu
-    d.setDate(d.getDate() - 1) // ke Minggu kemarin
-    return getLastSunday(d)
-  } else {
-    // Selasa-Sabtu: periode = Minggu kemarin
     return getLastSunday(d)
   }
+
+  // Selasa-Sabtu (2-6): periode = Minggu kemarin
+  return getLastSunday(d)
 }
 
 /**
- * Mendapatkan range pengisian untuk suatu periode.
- * Periode (Minggu) → pengisian Senin (periode + 1 hari) s/d Senin (periode + 8 hari).
+ * Mendapatkan range pengisian (kapan periode aktif) untuk suatu periode.
+ * Periode (Minggu) → aktif mulai Senin (periode + 1 hari) jam 12:00
+ *                    sampai Senin berikutnya (periode + 8 hari) jam 11:59.
+ *
+ * Untuk tampilan, kita tetap tampilkan tanggal saja (tanpa jam).
+ * start = Senin (periode + 1)
+ * end   = Senin minggu depan (periode + 8)
  */
 export function getFillingRange(periodDate) {
   const start = new Date(periodDate)
   start.setDate(start.getDate() + 1) // Senin
+  start.setHours(12, 0, 0, 0)        // Mulai jam 12:00
+
   const end = new Date(periodDate)
-  end.setDate(end.getDate() + 8) // Senin minggu depannya
+  end.setDate(end.getDate() + 8)      // Senin minggu depannya
+  end.setHours(11, 59, 59, 999)       // Berakhir jam 11:59
 
   return { start, end }
 }
 
 /**
  * Mengecek apakah pengisian masih dibuka untuk suatu periode.
+ * Menggunakan waktu sekarang (termasuk jam) untuk pengecekan akurat.
  */
 export function isFillingOpen(periodDate, now = new Date()) {
   const { start, end } = getFillingRange(periodDate)
-  const today = new Date(now)
-  today.setHours(0, 0, 0, 0)
-  start.setHours(0, 0, 0, 0)
-  end.setHours(23, 59, 59, 999)
-  return today >= start && today <= end
+  const current = new Date(now)
+  return current >= start && current <= end
 }
 
 /**
