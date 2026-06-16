@@ -1,6 +1,6 @@
 <template>
   <div class="activity-table">
-    <!-- Empty State -->
+
     <div v-if="activities.length === 0" class="empty-state">
       <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -13,7 +13,7 @@
     </div>
 
     <div v-else class="activity-sections">
-      <!-- Tabel Kegiatan Minggu Ini -->
+
       <div v-if="groupedActivities.length > 0" class="table-section">
         <h3 class="section-title">Aktivitas Seminggu Sebelumnya</h3>
         <div class="table-wrapper">
@@ -53,7 +53,7 @@
         </div>
       </div>
 
-      <!-- Tabel Target Minggu Depan -->
+
       <div v-if="groupedTargets.length > 0" class="table-section">
         <h3 class="section-title section-title--target">Target Minggu Depan</h3>
         <div class="table-wrapper">
@@ -106,7 +106,7 @@ const props = defineProps({
 const groupedActivities = computed(() => {
   const map = new Map()
   props.activities.forEach(act => {
-    if (!act.kegiatan) return // Skip empty activities
+    if (!act.kegiatan) return
 
     const key = act.kegiatan
     if (map.has(key)) {
@@ -127,7 +127,7 @@ const groupedActivities = computed(() => {
 const groupedTargets = computed(() => {
   const map = new Map()
   props.activities.forEach(act => {
-    if (!act.target_minggu_depan) return // Skip empty targets
+    if (!act.target_minggu_depan) return
 
     const key = act.target_minggu_depan
     if (map.has(key)) {

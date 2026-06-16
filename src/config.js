@@ -1,21 +1,4 @@
-/**
- * ========================================================
- *  KONFIGURASI APLIKASI LAPOR AKTIVITAS TIM TI
- * ========================================================
- *
- *  File ini adalah satu-satunya file yang perlu diedit
- *  untuk mengkustomisasi warna, daftar pegawai, dan
- *  informasi tim.
- *
- *  ► Untuk mengganti warna  → edit object `colors`
- *  ► Untuk menambah pegawai → tambah entry di `employees`
- *  ► Untuk ganti info tim   → edit object `team`
- */
-
 export const config = {
-  // ═══════════════════════════════════════════════════════
-  //  WARNA TEMA
-  // ═══════════════════════════════════════════════════════
   colors: {
     light: {
       primary: '#16a34a',
@@ -75,9 +58,6 @@ export const config = {
     },
   },
 
-  // ═══════════════════════════════════════════════════════
-  //  DAFTAR PEGAWAI TIM TI
-  // ═══════════════════════════════════════════════════════
   employees: [
     { id: 1, name: 'Ihsan Pratama', role: 'Anggota' },
     { id: 2, name: 'Muhammad Hanif Bahar', role: 'Anggota' },
@@ -92,9 +72,6 @@ export const config = {
     { id: 11, name: 'Anugerah Surya Atmaja', role: 'Anggota' },
   ],
 
-  // ═══════════════════════════════════════════════════════
-  //  INFORMASI TIM
-  // ═══════════════════════════════════════════════════════
   team: {
     name: 'Tim Teknologi Informasi',
     institution: 'BPS Provinsi Sumatera Barat',
@@ -104,19 +81,13 @@ export const config = {
     subtitle: 'BPS Provinsi Sumatera Barat',
   },
 
-  // ═══════════════════════════════════════════════════════
-  //  KONFIGURASI EXPORT
-  // ═══════════════════════════════════════════════════════
   export: {
-    headerColor: '16a34a',   // Warna header Excel (hex tanpa #)
-    fontFamily: 'Cambria',   // Font untuk laporan PDF
-    fontSize: 11,            // Ukuran font body PDF
-    titleFontSize: 14,       // Ukuran font judul PDF
+    headerColor: '16a34a',
+    fontFamily: 'Cambria',
+    fontSize: 11,
+    titleFontSize: 14,
   },
 
-  // ═══════════════════════════════════════════════════════
-  //  URL GOOGLE APPS SCRIPT & API KEYS (Dari file .env)
-  // ═══════════════════════════════════════════════════════
   apiUrl: import.meta.env.VITE_API_URL || '',
   geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
 }

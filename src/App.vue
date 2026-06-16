@@ -22,7 +22,6 @@ import { useTheme } from './composables/useTheme'
 import { config } from './config'
 import AppHeader from './components/AppHeader.vue'
 
-// Initialize theme
 useTheme()
 
 const currentYear = computed(() => new Date().getFullYear())

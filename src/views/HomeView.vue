@@ -1,6 +1,6 @@
 <template>
   <div class="home-view">
-    <!-- Hero Section -->
+
     <section class="hero">
       <div class="hero__content animate-fade-in-up">
         <h2 class="hero__title">
@@ -13,7 +13,7 @@
       </div>
     </section>
 
-    <!-- Period Selector -->
+
     <PeriodSelector
       :period-label="periodLabel"
       :activity-range="activityRange"
@@ -24,7 +24,7 @@
       @today="goToCurrentPeriod"
     />
 
-    <!-- Action Bar -->
+
     <div class="action-bar animate-fade-in" style="animation-delay: 100ms;">
       <router-link
         v-if="canFill"
@@ -47,19 +47,19 @@
       </div>
     </div>
 
-    <!-- Employee Status -->
+
     <EmployeeStatus :activities="activities" />
 
-    <!-- Loading -->
+
     <div v-if="loading" class="loading-container">
       <div class="spinner"></div>
       <p>Memuat data kegiatan...</p>
     </div>
 
-    <!-- Activity Table -->
+
     <ActivityTable v-else :activities="activities" />
 
-    <!-- Export Section -->
+
     <div v-if="activities.length > 0" class="export-section animate-fade-in">
       <h3 class="export-section__title">Export Laporan</h3>
       <p class="export-section__desc">Download rekap kegiatan dalam format Excel atau PDF.</p>
@@ -71,7 +71,7 @@
       />
     </div>
 
-    <!-- Toast -->
+
     <Transition name="toast">
       <div v-if="toast.show" :class="['toast', `toast-${toast.type}`]">
         <strong>{{ toast.type === 'success' ? '✓' : '✕' }}</strong>
@@ -114,7 +114,7 @@ async function loadActivities() {
   activities.value = await getActivities(periodISO.value)
 }
 
-// Show toast if returning from add page, navigate to period if specified
+
 onMounted(() => {
   if (route.query.period) {
     goToPeriod(parseISO(route.query.period))
@@ -125,7 +125,6 @@ onMounted(() => {
   loadActivities()
 })
 
-// Reload when period changes
 watch(periodISO, () => {
   loadActivities()
 })
@@ -146,7 +145,6 @@ function showToast(message, type = 'success') {
   padding: var(--space-6) 0 var(--space-16);
 }
 
-/* Hero */
 .hero {
   text-align: center;
   padding: var(--space-8) 0 var(--space-4);
@@ -166,7 +164,6 @@ function showToast(message, type = 'success') {
   margin: 0 auto;
 }
 
-/* Action Bar */
 .action-bar {
   display: flex;
   align-items: center;
@@ -186,7 +183,6 @@ function showToast(message, type = 'success') {
   font-weight: 500;
 }
 
-/* Loading */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -200,7 +196,6 @@ function showToast(message, type = 'success') {
   font-size: var(--font-size-sm);
 }
 
-/* Export Section */
 .export-section {
   padding: var(--space-6);
   background: var(--color-surface);
@@ -219,7 +214,6 @@ function showToast(message, type = 'success') {
   margin-bottom: var(--space-4);
 }
 
-/* Toast animation */
 .toast-enter-active {
   animation: slideInRight var(--transition-spring);
 }

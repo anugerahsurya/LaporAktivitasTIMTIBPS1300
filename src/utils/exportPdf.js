@@ -2,13 +2,6 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { config } from '../config'
 
-/**
- * Export kegiatan ke PDF sebagai laporan resmi.
- * - Font: Cambria (fallback ke Helvetica di jsPDF)
- * - Warna font: hitam
- * - Bold pada bagian penting
- * - Tabel kegiatan dengan border
- */
 export async function exportToPdf(activities, periodLabel, activityRange, summary = '') {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -22,20 +15,16 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
   const contentWidth = pageWidth - margin * 2
   let y = margin
 
-  // ─── Header Decoration ───────────────────────────────
-  // Green gradient bar at top
   const headerColor = hexToRgb(config.colors.light.primary)
   doc.setFillColor(headerColor.r, headerColor.g, headerColor.b)
   doc.rect(0, 0, pageWidth, 12, 'F')
 
-  // Lighter green accent below
   const accentColor = hexToRgb(config.colors.light.primaryLight)
   doc.setFillColor(accentColor.r, accentColor.g, accentColor.b)
   doc.rect(0, 12, pageWidth, 3, 'F')
 
   y = 25
 
-  // ─── Title ────────────────────────────────────────────
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(14)
   doc.setTextColor(0, 0, 0)
@@ -51,13 +40,11 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
   doc.text(config.team.institution, pageWidth / 2, y, { align: 'center' })
   y += 10
 
-  // Divider line
   doc.setDrawColor(headerColor.r, headerColor.g, headerColor.b)
   doc.setLineWidth(0.5)
   doc.line(margin, y, pageWidth - margin, y)
   y += 8
 
-  // ─── Info Section ─────────────────────────────────────
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(11)
 
@@ -73,18 +60,14 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     doc.text(label, margin, y)
     doc.setFont('helvetica', 'normal')
     
-    // Gunakan konfigurasi maxWidth dari jsPDF yang lebih mutakhir
     doc.text(value, margin + 35, y, { maxWidth: contentWidth - 35 })
     
-    // Hitung estimasi baris untuk menggeser margin Y ke bawah
     const textLines = doc.splitTextToSize(value, contentWidth - 35)
-    y += (textLines.length * 6) + 1 // Tambah sedikit spasi ekstra
+    y += (textLines.length * 6) + 1
   })
 
   y += 5
 
-
-  // ─── Table 1: Kegiatan Minggu Ini ───────────────────────
   const groupedActivities = groupActivities(activities, 'kegiatan')
   if (groupedActivities.length > 0) {
     doc.setFont('helvetica', 'bold')
@@ -129,10 +112,8 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     y = doc.lastAutoTable.finalY + 10
   }
 
-  // ─── Table 2: Target Minggu Depan ───────────────────────
   const groupedTargets = groupActivities(activities, 'target_minggu_depan')
   if (groupedTargets.length > 0) {
-    // Check if we need to add a page
     if (y > pageHeight - 40) {
       doc.addPage()
       y = margin
@@ -179,7 +160,6 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     y = doc.lastAutoTable.finalY + 10
   }
 
-  // ─── AI Summary / Narasi (Bottom) ─────────────────────
   if (summary) {
     if (y > pageHeight - 50) {
       doc.addPage()
@@ -194,10 +174,8 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
     
-    // Gunakan align justify
     doc.text(summary, margin, y, { maxWidth: contentWidth, align: 'justify' })
     
-    // Perkirakan tinggi teks
     const summaryLines = doc.splitTextToSize(summary, contentWidth)
     y += (summaryLines.length * 5) + 6
 
@@ -209,7 +187,6 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
   }
 
   function drawFooter(data) {
-    // Prevent double drawing if not needed, handled by jsPDF automatically per page but just in case
     const footerColor = hexToRgb(config.colors.light.primary)
     doc.setFillColor(footerColor.r, footerColor.g, footerColor.b)
     doc.rect(0, pageHeight - 10, pageWidth, 10, 'F')
@@ -218,7 +195,6 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     doc.setFillColor(lightFooter.r, lightFooter.g, lightFooter.b)
     doc.rect(0, pageHeight - 13, pageWidth, 3, 'F')
 
-    // Page number
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8)
     doc.setTextColor(255, 255, 255)
@@ -230,14 +206,10 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     )
   }
 
-  // ─── Download ─────────────────────────────────────────
   const filename = `Laporan_Aktivitas_TIM_TI_${periodLabel.replace(/[,\s]+/g, '_')}.pdf`
   doc.save(filename)
 }
 
-/**
- * Group activities by key
- */
 function groupActivities(activities, keyField) {
   const map = new Map()
   activities.forEach(act => {
@@ -259,9 +231,6 @@ function groupActivities(activities, keyField) {
   return Array.from(map.values())
 }
 
-/**
- * Convert hex color to RGB
- */
 function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   return result ? {

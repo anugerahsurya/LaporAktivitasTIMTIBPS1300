@@ -1,22 +1,16 @@
 import * as XLSX from 'xlsx'
 import { config } from '../config'
 
-/**
- * Export kegiatan ke file Excel (.xlsx) dengan format terpisah untuk Kegiatan dan Target.
- */
 export function exportToExcel(activities, periodLabel) {
-  // Group activities
   const groupedActivities = groupActivities(activities, 'kegiatan')
   const groupedTargets = groupActivities(activities, 'target_minggu_depan')
 
-  // Prepare data rows for Kegiatan
   const kegiatanRows = groupedActivities.map((item, idx) => ({
     'No': idx + 1,
     'Uraian': item.text,
     'Kontributor': item.contributors.join(', '),
   }))
 
-  // Prepare data rows for Target
   const targetRows = groupedTargets.map((item, idx) => ({
     'No': idx + 1,
     'Uraian': item.text,
@@ -26,13 +20,11 @@ export function exportToExcel(activities, periodLabel) {
   const wb = XLSX.utils.book_new()
   const wsRows = []
 
-  // Add title rows
   wsRows.push([`REKAP AKTIVITAS MINGGUAN ${config.team.name.toUpperCase()}`])
   wsRows.push([`${config.team.institution}`])
   wsRows.push([`Periode: ${periodLabel}`])
-  wsRows.push([]) // empty
+  wsRows.push([])
 
-  // Section 1: Kegiatan
   if (kegiatanRows.length > 0) {
     wsRows.push(['AKTIVITAS SEMINGGU SEBELUMNYA'])
     wsRows.push(['No', 'Kegiatan', 'Kontributor'])
@@ -42,7 +34,6 @@ export function exportToExcel(activities, periodLabel) {
     wsRows.push([])
   }
 
-  // Section 2: Target
   if (targetRows.length > 0) {
     wsRows.push(['TARGET MINGGU DEPAN'])
     wsRows.push(['No', 'Target', 'Kontributor'])
@@ -53,21 +44,18 @@ export function exportToExcel(activities, periodLabel) {
 
   const ws = XLSX.utils.aoa_to_sheet(wsRows)
 
-  // Merges
   ws['!merges'] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
   ]
 
-  // Column widths
   ws['!cols'] = [
-    { wch: 5 },   // No
-    { wch: 60 },  // Uraian
-    { wch: 30 },  // Kontributor
+    { wch: 5 },
+    { wch: 60 },
+    { wch: 30 },
   ]
 
-  // Add styles via sheetjs style format (requires pro/styling build usually, but we set it up)
   const range = XLSX.utils.decode_range(ws['!ref'])
   for (let R = range.s.r; R <= range.e.r; R++) {
     for (let C = range.s.c; C <= range.e.c; C++) {
@@ -79,20 +67,17 @@ export function exportToExcel(activities, periodLabel) {
         alignment: { vertical: 'top', wrapText: true }
       }
 
-      // If it's a table header (e.g. "No")
       if (ws[cell].v === 'No' || ws[cell].v === 'Kegiatan' || ws[cell].v === 'Target' || ws[cell].v === 'Kontributor') {
         ws[cell].s.font.bold = true
         ws[cell].s.fill = { fgColor: { rgb: config.export.headerColor.toUpperCase() } }
         ws[cell].s.font.color = { rgb: 'FFFFFF' }
         ws[cell].s.alignment.horizontal = 'center'
         ws[cell].s.border = getBorder()
-      } 
-      // If it's a section title
+      }
       else if (ws[cell].v === 'AKTIVITAS SEMINGGU SEBELUMNYA' || ws[cell].v === 'TARGET MINGGU DEPAN') {
         ws[cell].s.font.bold = true
         ws[cell].s.font.color = { rgb: '16A34A' }
       }
-      // If it's a data cell
       else if (typeof ws[cell].v === 'number' || (ws[cell].v && R > 4 && ws[cell].v !== 'REKAP AKTIVITAS MINGGUAN' && !ws[cell].v.toString().startsWith('Periode'))) {
         ws[cell].s.border = getBorder()
       }
@@ -114,9 +99,6 @@ export function exportToExcel(activities, periodLabel) {
   XLSX.writeFile(wb, filename)
 }
 
-/**
- * Group activities by specific key
- */
 function groupActivities(activities, keyField) {
   const map = new Map()
   activities.forEach(act => {

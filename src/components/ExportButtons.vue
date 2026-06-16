@@ -19,7 +19,7 @@
       {{ loadingSummary ? 'Generating Summary...' : 'Export PDF' }}
     </button>
 
-    <!-- Custom Confirm Modal -->
+
     <Teleport to="body">
       <Transition name="modal">
         <div v-if="showConfirmModal" class="modal-backdrop" @click="closeConfirmModal">
@@ -113,7 +113,6 @@ async function confirmExportPdf() {
   animation: spin 0.8s linear infinite;
 }
 
-/* Modal Styles */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -129,8 +128,8 @@ async function confirmExportPdf() {
 }
 
 .modal-content {
-  background-color: #ffffff; /* Kotakan eksplisit putih */
-  color: #333333; /* Teks gelap */
+  background-color: #ffffff;
+  color: #333333;
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 450px;
@@ -140,7 +139,7 @@ async function confirmExportPdf() {
 }
 
 .modal-header {
-  background-color: var(--surface); /* Ikut warna header web */
+  background-color: var(--surface);
   color: var(--text);
   display: flex;
   align-items: center;
@@ -181,7 +180,6 @@ async function confirmExportPdf() {
   border-top: 1px solid #eeeeee;
 }
 
-/* Modal Transitions */
 .modal-enter-active,
 .modal-leave-active {
   transition: opacity 0.3s ease;

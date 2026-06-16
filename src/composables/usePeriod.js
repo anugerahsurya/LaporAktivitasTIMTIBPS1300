@@ -9,9 +9,6 @@ import {
   getActivityRange,
 } from '../utils/dateUtils'
 
-/**
- * Composable untuk mengelola periode mingguan
- */
 export function usePeriod() {
   const currentPeriod = ref(getCurrentPeriod())
   const selectedPeriod = ref(getCurrentPeriod())

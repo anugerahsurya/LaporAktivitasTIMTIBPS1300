@@ -1,18 +1,12 @@
 import { ref } from 'vue'
 import { config } from '../config'
 
-/**
- * Composable untuk komunikasi dengan Google Apps Script API.
- * Jika apiUrl belum diset, menggunakan localStorage sebagai mock storage.
- */
 export function useApi() {
   const loading = ref(false)
   const error = ref(null)
 
   const isConnected = !!config.apiUrl
 
-  // ─── Local Storage Mock ───────────────────────────────
-  // Digunakan saat Apps Script belum di-deploy
   function getLocalData(key) {
     try {
       const data = localStorage.getItem(key)
@@ -26,11 +20,6 @@ export function useApi() {
     localStorage.setItem(key, JSON.stringify(value))
   }
 
-  // ─── API Functions ────────────────────────────────────
-
-  /**
-   * Ambil daftar kegiatan untuk suatu periode
-   */
   async function getActivities(periode) {
     loading.value = true
     error.value = null
@@ -41,7 +30,6 @@ export function useApi() {
         loading.value = false
         return data.activities || []
       } else {
-        // Mock: baca dari localStorage
         const all = getLocalData('activities') || []
         loading.value = false
         return all.filter(a => a.periode === periode)
@@ -53,9 +41,6 @@ export function useApi() {
     }
   }
 
-  /**
-   * Tambah kegiatan baru
-   */
   async function addActivity(activityData) {
     loading.value = true
     error.value = null
@@ -73,7 +58,6 @@ export function useApi() {
         loading.value = false
         return data
       } else {
-        // Mock: simpan ke localStorage
         const all = getLocalData('activities') || []
         const newActivities = activityData.activities.map((act, idx) => ({
           id: `ACT${Date.now()}${idx}`,
@@ -96,9 +80,6 @@ export function useApi() {
     }
   }
 
-  /**
-   * Ambil suggestions kegiatan yang sudah ada di periode tertentu
-   */
   async function getSuggestions(periode) {
     const activities = await getActivities(periode)
     const uniqueActivities = [...new Set(activities.map(a => a.kegiatan).filter(Boolean))]
@@ -109,9 +90,6 @@ export function useApi() {
     }
   }
 
-  /**
-   * Ambil daftar periode yang memiliki data
-   */
   async function getPeriods() {
     loading.value = true
     error.value = null
@@ -134,9 +112,6 @@ export function useApi() {
     }
   }
 
-  /**
-   * Hapus kegiatan
-   */
   async function deleteActivity(id) {
     loading.value = true
     error.value = null
@@ -164,21 +139,25 @@ export function useApi() {
     }
   }
 
-  /**
-   * Generate AI summary via Gemini langsung dari Frontend (tanpa via Apps Script)
-   */
   async function generateSummary(activities) {
     loading.value = true
     error.value = null
     try {
       const activityList = activities.map(a => a.kegiatan).filter(Boolean).join(', ')
-      const prompt = `Buatkan ringkasan narasi eksekutif (maksimal 2 paragraf padat) untuk laporan aktivitas mingguan Tim Teknologi Informasi BPS Provinsi Sumatera Barat. 
-Daftar kegiatan yang diselesaikan: ${activityList}.
+      const targetList = activities.map(a => a.target_minggu_depan).filter(Boolean)
+      const uniqueTargets = [...new Set(targetList)].join(', ')
+
+      const prompt = `Buatkan ringkasan narasi eksekutif (tepat 2 paragraf padat) untuk laporan aktivitas mingguan Tim Teknologi Informasi BPS Provinsi Sumatera Barat. 
+
+Daftar kegiatan yang diselesaikan minggu ini: ${activityList}.
+${uniqueTargets ? `Rencana/target kegiatan minggu depan: ${uniqueTargets}.` : ''}
+
 Instruksi spesifik:
-1. Bahas intisari kegiatannya saja secara profesional.
-2. JANGAN menyebutkan nama anggota tim atau kontributor sama sekali.
-3. Fokus pada pencapaian dan pekerjaan tim secara kolektif.
-4. JANGAN membuat/menebak kepanjangan dari singkatan apa pun yang ada di daftar kegiatan (misal: SBR, SAKERNAS, dll), biarkan singkatan tersebut apa adanya.`
+1. Paragraf pertama: Bahas intisari kegiatan yang telah diselesaikan minggu ini secara profesional.
+2. Paragraf kedua: ${uniqueTargets ? 'Bahas rencana dan target kegiatan tim untuk minggu depan berdasarkan data di atas.' : 'Bahas harapan dan rencana umum untuk minggu depan berdasarkan konteks kegiatan minggu ini.'}
+3. JANGAN menyebutkan nama anggota tim atau kontributor sama sekali.
+4. Fokus pada pencapaian dan pekerjaan tim secara kolektif.
+5. JANGAN membuat/menebak kepanjangan dari singkatan apa pun yang ada di daftar kegiatan (misal: SBR, SAKERNAS, dll), biarkan singkatan tersebut apa adanya.`
 
       if (!config.geminiApiKey) {
         throw new Error('API Key Gemini tidak ditemukan di .env (VITE_GEMINI_API_KEY).')
@@ -207,8 +186,6 @@ Instruksi spesifik:
       error.value = e.message
       loading.value = false
       
-      // Jika error karena server kepenuhan (503) atau lainnya, kembalikan pesan fallback
-      // agar tidak kosong melompong di PDF.
       return 'Catatan: Ringkasan narasi belum dapat di-generate karena Server AI Google sedang sibuk atau mengalami gangguan (Error 503). Silakan coba lagi beberapa saat kemudian.'
     }
   }

@@ -3,10 +3,6 @@ import { config } from '../config'
 
 const isDark = ref(false)
 
-/**
- * Composable untuk mengelola dark/light mode
- * Membaca preferensi dari localStorage dan system preference
- */
 export function useTheme() {
   function applyTheme(dark) {
     const root = document.documentElement
@@ -14,7 +10,6 @@ export function useTheme() {
 
     root.setAttribute('data-theme', dark ? 'dark' : 'light')
 
-    // Map config colors to CSS variables
     root.style.setProperty('--color-primary', theme.primary)
     root.style.setProperty('--color-primary-hover', theme.primaryHover)
     root.style.setProperty('--color-primary-light', theme.primaryLight)

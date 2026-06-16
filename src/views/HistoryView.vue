@@ -1,7 +1,7 @@
 <template>
   <div class="history-view">
     <div class="container">
-      <!-- Back Button -->
+
       <router-link to="/" class="back-link animate-fade-in">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"/>
@@ -10,19 +10,19 @@
         Kembali ke Beranda
       </router-link>
 
-      <!-- Title -->
+
       <div class="history-header animate-fade-in-up">
         <h2 class="gradient-text">Riwayat Periode</h2>
         <p>Lihat kegiatan yang tercatat di periode-periode sebelumnya.</p>
       </div>
 
-      <!-- Loading -->
+
       <div v-if="loading" class="loading-container">
         <div class="spinner"></div>
         <p>Memuat data...</p>
       </div>
 
-      <!-- Period List -->
+
       <div v-else class="period-grid stagger-children">
         <div
           v-for="period in periods"
@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <!-- Empty State -->
+
       <div v-if="!loading && periods.length === 0" class="empty-state">
         <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"/>
@@ -109,7 +109,6 @@ onMounted(async () => {
 })
 
 function viewPeriod(dateISO) {
-  // Navigate to home with period parameter
   router.push({ path: '/', query: { period: dateISO } })
 }
 </script>

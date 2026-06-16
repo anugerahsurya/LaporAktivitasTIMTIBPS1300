@@ -6,7 +6,7 @@
         <p>Isikan kegiatan yang telah dilakukan minggu sebelumnya dan target minggu depan.</p>
       </div>
 
-      <!-- Step 1: Pilih Pegawai -->
+
       <div class="form-group mb-8">
         <label class="form-label" for="employee-select">Nama Pegawai</label>
         <select
@@ -26,7 +26,7 @@
       </div>
 
       <div v-if="selectedEmployee" class="animate-fade-in-up">
-        <!-- Section: Kegiatan Minggu Lalu -->
+
         <div class="section-container">
           <h3 class="section-title">Aktivitas Seminggu Sebelumnya</h3>
           <div class="add-form__activities">
@@ -49,7 +49,7 @@
                 </button>
               </div>
 
-              <!-- Kegiatan Input with Autocomplete -->
+
               <div class="form-group">
                 <div class="autocomplete-wrapper">
                   <input
@@ -83,7 +83,7 @@
               </div>
             </div>
 
-            <!-- Add More -->
+
             <button class="btn btn-secondary add-form__add-more" @click="addPastActivity">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -96,7 +96,7 @@
 
         <hr class="section-divider" />
 
-        <!-- Section: Target Minggu Depan -->
+
         <div class="section-container">
           <h3 class="section-title section-title--target">Target Minggu Depan</h3>
           <div class="add-form__activities">
@@ -119,7 +119,7 @@
                 </button>
               </div>
 
-              <!-- Target Input -->
+
               <div class="form-group">
                 <div class="autocomplete-wrapper">
                   <input
@@ -153,7 +153,7 @@
               </div>
             </div>
 
-            <!-- Add More Target -->
+
             <button class="btn btn-secondary add-form__add-more" @click="addFutureTarget">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -164,7 +164,7 @@
           </div>
         </div>
 
-        <!-- Submit -->
+
         <div class="add-form__actions">
           <button class="btn btn-ghost" @click="$emit('cancel')">Batal</button>
           <button
@@ -206,7 +206,6 @@ const selectedEmployeeData = computed(() =>
   employees.find(e => String(e.id) === String(selectedEmployee.value))
 )
 
-// Valid jika ada minimal satu kegiatan ATAU satu target yang terisi
 const isValid = computed(() => {
   if (!selectedEmployee.value) return false
   const hasActivity = pastActivities.some(a => a.text.trim().length > 0)
@@ -267,7 +266,6 @@ async function handleSubmit() {
   const maxLength = Math.max(validActivities.length, validTargets.length)
   const finalActivities = []
 
-  // Zip activities and targets into the same payload structure
   for (let i = 0; i < maxLength; i++) {
     finalActivities.push({
       kegiatan: validActivities[i] || '',
@@ -381,7 +379,6 @@ async function handleSubmit() {
   color: var(--color-warning);
 }
 
-/* Autocomplete */
 .autocomplete-wrapper {
   position: relative;
 }
@@ -422,7 +419,6 @@ async function handleSubmit() {
   flex-shrink: 0;
 }
 
-/* Actions */
 .add-form__add-more {
   align-self: flex-start;
 }

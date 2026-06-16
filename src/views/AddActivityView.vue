@@ -1,7 +1,7 @@
 <template>
   <div class="add-view">
     <div class="container">
-      <!-- Back Button -->
+
       <router-link to="/" class="back-link animate-fade-in">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"/>
@@ -10,7 +10,7 @@
         Kembali ke Beranda
       </router-link>
 
-      <!-- Period Info -->
+
       <div class="period-info card animate-fade-in-up" style="animation-delay: 50ms;">
         <div class="period-info__icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -26,7 +26,7 @@
         </div>
       </div>
 
-      <!-- Not Open Warning -->
+
       <div v-if="!canFill" class="warning-card card animate-fade-in-up" style="animation-delay: 100ms;">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -39,7 +39,7 @@
         </div>
       </div>
 
-      <!-- Form -->
+
       <AddActivityForm
         v-if="canFill"
         :suggestions="suggestions"
