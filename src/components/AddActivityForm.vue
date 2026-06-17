@@ -92,6 +92,14 @@
               Tambah Kegiatan Lain
             </button>
           </div>
+          <p v-if="showErrors && !hasActivity" class="validation-error">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Minimal 1 kegiatan minggu ini harus diisi.
+          </p>
         </div>
 
         <hr class="section-divider" />
@@ -162,6 +170,14 @@
               Tambah Target Lain
             </button>
           </div>
+          <p v-if="showErrors && !hasTarget" class="validation-error">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Minimal 1 target minggu depan harus diisi.
+          </p>
         </div>
 
 
@@ -170,7 +186,7 @@
           <button
             class="btn btn-primary btn-lg"
             @click="handleSubmit"
-            :disabled="!isValid || submitting"
+            :disabled="submitting"
           >
             <span v-if="submitting" class="spinner-small"></span>
             {{ submitting ? 'Menyimpan...' : 'Submit Laporan' }}
@@ -178,6 +194,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Toast Notification -->
+    <Transition name="toast">
+      <div v-if="toastVisible" class="toast toast--error">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>{{ toastMessage }}</span>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -195,6 +223,10 @@ const emit = defineEmits(['submit', 'cancel'])
 const employees = config.employees
 const selectedEmployee = ref('')
 const submitting = ref(false)
+const showErrors = ref(false)
+const toastVisible = ref(false)
+const toastMessage = ref('')
+let toastTimer = null
 
 const pastActivities = reactive([{ text: '' }])
 const futureTargets = reactive([{ text: '' }])
@@ -206,12 +238,20 @@ const selectedEmployeeData = computed(() =>
   employees.find(e => String(e.id) === String(selectedEmployee.value))
 )
 
+const hasActivity = computed(() => pastActivities.some(a => a.text.trim().length > 0))
+const hasTarget = computed(() => futureTargets.some(t => t.text.trim().length > 0))
+
 const isValid = computed(() => {
   if (!selectedEmployee.value) return false
-  const hasActivity = pastActivities.some(a => a.text.trim().length > 0)
-  const hasTarget = futureTargets.some(t => t.text.trim().length > 0)
-  return hasActivity || hasTarget
+  return hasActivity.value && hasTarget.value
 })
+
+function showToast(message) {
+  toastMessage.value = message
+  toastVisible.value = true
+  if (toastTimer) clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => { toastVisible.value = false }, 4000)
+}
 
 function addPastActivity() { pastActivities.push({ text: '' }) }
 function removePastActivity(idx) { pastActivities.splice(idx, 1) }
@@ -256,7 +296,27 @@ function selectTargetSuggestion(idx, suggestion) {
 }
 
 async function handleSubmit() {
-  if (!isValid.value || submitting.value) return
+  showErrors.value = true
+
+  if (!selectedEmployee.value) {
+    showToast('Silakan pilih nama pegawai terlebih dahulu.')
+    return
+  }
+
+  if (!hasActivity.value && !hasTarget.value) {
+    showToast('Kegiatan minggu ini dan target minggu depan wajib diisi minimal masing-masing 1.')
+    return
+  }
+  if (!hasActivity.value) {
+    showToast('Minimal 1 kegiatan minggu ini harus diisi.')
+    return
+  }
+  if (!hasTarget.value) {
+    showToast('Minimal 1 target minggu depan harus diisi.')
+    return
+  }
+
+  if (submitting.value) return
 
   submitting.value = true
   
@@ -441,9 +501,90 @@ async function handleSubmit() {
   animation: spin 0.8s linear infinite;
 }
 
+/* Validation error message */
+.validation-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-danger, #ef4444);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-md, 8px);
+  animation: shake 0.4s ease-in-out;
+}
+
+.validation-error svg {
+  flex-shrink: 0;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  bottom: var(--space-6, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-4, 16px) var(--space-6, 24px);
+  border-radius: var(--radius-lg, 12px);
+  font-size: var(--font-size-sm, 14px);
+  font-weight: 500;
+  z-index: 1000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  max-width: 90vw;
+}
+
+.toast--error {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+}
+
+.toast--error svg {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Toast transition */
+.toast-enter-active {
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast-leave-active {
+  transition: all 0.25s ease-in;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(-50%) translateY(20px) scale(0.95);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px) scale(0.98);
+}
+
 @media (max-width: 640px) {
   .add-form__card {
     padding: var(--space-5);
+  }
+
+  .toast {
+    bottom: var(--space-4, 16px);
+    padding: var(--space-3, 12px) var(--space-5, 20px);
+    font-size: var(--font-size-xs, 12px);
   }
 }
 </style>
