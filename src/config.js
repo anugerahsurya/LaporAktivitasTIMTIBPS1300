@@ -60,16 +60,15 @@ export const config = {
 
   employees: [
     { id: 1, name: 'Ihsan Pratama', role: 'Anggota' },
-    { id: 2, name: 'Muhammad Hanif Bahar', role: 'Anggota' },
-    { id: 3, name: 'Tri Hayuni Syardi', role: 'Anggota' },
-    { id: 4, name: 'Ryche Pranita', role: 'Anggota' },
-    { id: 5, name: 'Benny Firmansyah', role: 'Anggota' },
-    { id: 6, name: 'Hardini Juliarti', role: 'Anggota' },
-    { id: 7, name: 'Hamdi Rafiqi', role: 'Anggota' },
-    { id: 8, name: 'Ryan Oktarino', role: 'Anggota' },
-    { id: 9, name: 'M. Hafiz Al Ihsan', role: 'Anggota' },
-    { id: 10, name: 'Giani Jovita Jane', role: 'Anggota' },
-    { id: 11, name: 'Anugerah Surya Atmaja', role: 'Anggota' },
+    { id: 2, name: 'Tri Hayuni Syardi', role: 'Anggota' },
+    { id: 3, name: 'Ryche Pranita', role: 'Anggota' },
+    { id: 4, name: 'Benny Firmansyah', role: 'Anggota' },
+    { id: 5, name: 'Hardini Juliarti', role: 'Anggota' },
+    { id: 6, name: 'Hamdi Rafiqi', role: 'Anggota' },
+    { id: 7, name: 'Ryan Oktarino', role: 'Anggota' },
+    { id: 8, name: 'M. Hafiz Al Ihsan', role: 'Anggota' },
+    { id: 9, name: 'Giani Jovita Jane', role: 'Anggota' },
+    { id: 10, name: 'Anugerah Surya Atmaja', role: 'Anggota' },
   ],
 
   team: {

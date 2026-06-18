@@ -5,10 +5,10 @@
       <div class="hero__content animate-fade-in-up">
         <h2 class="hero__title">
           <span class="gradient-text">Rekap Aktivitas</span>
-          <br />Mingguan Tim TI
+          <br />Seminggu Kedepan Tim TI
         </h2>
         <p class="hero__subtitle">
-          Pantau dan catat kegiatan tim secara terstruktur setiap minggunya.
+          Pantau dan catat target aktivitas tim secara terstruktur setiap minggunya.
         </p>
       </div>
     </section>

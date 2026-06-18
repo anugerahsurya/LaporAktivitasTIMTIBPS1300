@@ -1,5 +1,69 @@
 import { ref } from 'vue'
 import { config } from '../config'
+import { parseISO, formatDateISO } from '../utils/dateUtils'
+
+function getPrevPeriodISO(periodeISO) {
+  const d = parseISO(periodeISO)
+  d.setDate(d.getDate() - 7)
+  return formatDateISO(d)
+}
+
+function mergeActivities(periode, currentActs, prevActs) {
+  // Group current acts by employee
+  const currentByEmployee = {}
+  currentActs.forEach(act => {
+    const empId = String(act.pegawai_id)
+    if (!currentByEmployee[empId]) {
+      currentByEmployee[empId] = {
+        empId,
+        empNama: act.pegawai_nama,
+        targets: [],
+        originalRows: []
+      }
+    }
+    currentByEmployee[empId].originalRows.push(act)
+    if (act.target_minggu_depan) {
+      currentByEmployee[empId].targets.push(act.target_minggu_depan)
+    }
+  })
+
+  // Group prev acts by employee to get their targets (which are current activities)
+  const prevByEmployee = {}
+  prevActs.forEach(act => {
+    const empId = String(act.pegawai_id)
+    if (!prevByEmployee[empId]) {
+      prevByEmployee[empId] = {
+        targets: []
+      }
+    }
+    if (act.target_minggu_depan) {
+      prevByEmployee[empId].targets.push(act.target_minggu_depan)
+    }
+  })
+
+  const merged = []
+  // For each employee in currentActs (only those who have submitted in the current period)
+  Object.values(currentByEmployee).forEach(emp => {
+    const prevTargets = prevByEmployee[emp.empId]?.targets || []
+    const currentTargets = emp.targets
+
+    const maxLength = Math.max(prevTargets.length, currentTargets.length)
+
+    for (let i = 0; i < maxLength; i++) {
+      merged.push({
+        id: emp.originalRows[i]?.id || `ACT_${emp.empId}_${Date.now()}_${i}`,
+        periode: periode,
+        kegiatan: prevTargets[i] || '',
+        target_minggu_depan: currentTargets[i] || '',
+        pegawai_id: emp.empId,
+        pegawai_nama: emp.empNama,
+        created_at: emp.originalRows[i]?.created_at || new Date().toISOString()
+      })
+    }
+  })
+
+  return merged
+}
 
 export function useApi() {
   const loading = ref(false)
@@ -20,19 +84,37 @@ export function useApi() {
     localStorage.setItem(key, JSON.stringify(value))
   }
 
-  async function getActivities(periode) {
+  async function getActivities(periode, fetchPrev = true) {
     loading.value = true
     error.value = null
     try {
       if (isConnected) {
-        const res = await fetch(`${config.apiUrl}?action=getActivities&periode=${periode}`)
-        const data = await res.json()
+        const prevPeriode = fetchPrev ? getPrevPeriodISO(periode) : null
+        
+        const currentPromise = fetch(`${config.apiUrl}?action=getActivities&periode=${periode}`).then(r => r.json())
+        const prevPromise = prevPeriode 
+          ? fetch(`${config.apiUrl}?action=getActivities&periode=${prevPeriode}`).then(r => r.json())
+          : Promise.resolve({ activities: [] })
+          
+        const [currentRes, prevRes] = await Promise.all([currentPromise, prevPromise])
+        const currentActs = currentRes.activities || []
+        const prevActs = prevRes.activities || []
+        
         loading.value = false
-        return data.activities || []
+        if (!fetchPrev) return currentActs
+        
+        return mergeActivities(periode, currentActs, prevActs)
       } else {
         const all = getLocalData('activities') || []
+        const currentActs = all.filter(a => a.periode === periode)
+        if (!fetchPrev) {
+          loading.value = false
+          return currentActs
+        }
+        const prevPeriode = getPrevPeriodISO(periode)
+        const prevActs = all.filter(a => a.periode === prevPeriode)
         loading.value = false
-        return all.filter(a => a.periode === periode)
+        return mergeActivities(periode, currentActs, prevActs)
       }
     } catch (e) {
       error.value = e.message

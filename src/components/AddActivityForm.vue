@@ -3,7 +3,7 @@
     <div class="add-form__card card">
       <div class="add-form__header">
         <h2>Tambah Laporan</h2>
-        <p>Isikan kegiatan yang telah dilakukan minggu sebelumnya dan target minggu depan.</p>
+        <p>Isikan target aktivitas untuk minggu depan.</p>
       </div>
 
 
@@ -27,82 +27,7 @@
 
       <div v-if="selectedEmployee" class="animate-fade-in-up">
 
-        <div class="section-container">
-          <h3 class="section-title">Aktivitas Seminggu Sebelumnya</h3>
-          <div class="add-form__activities">
-            <div
-              v-for="(activity, idx) in pastActivities"
-              :key="'kegiatan-'+idx"
-              class="activity-entry card"
-            >
-              <div class="activity-entry__header">
-                <span class="activity-entry__number">Kegiatan {{ idx + 1 }}</span>
-                <button
-                  class="btn btn-ghost btn-sm"
-                  @click="removePastActivity(idx)"
-                  title="Hapus kegiatan"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  </svg>
-                </button>
-              </div>
 
-
-              <div class="form-group">
-                <div class="autocomplete-wrapper">
-                  <input
-                    class="form-input"
-                    type="text"
-                    v-model="activity.text"
-                    @input="onKegiatanInput(idx)"
-                    @focus="showSuggestions[idx] = true"
-                    @blur="hideSuggestions(idx)"
-                    placeholder="Ketik kegiatan yang sudah diselesaikan..."
-                    autocomplete="off"
-                  />
-                  <div
-                    v-if="showSuggestions[idx] && filteredSuggestions(idx).length > 0"
-                    class="autocomplete-dropdown"
-                  >
-                    <div
-                      v-for="suggestion in filteredSuggestions(idx)"
-                      :key="suggestion"
-                      class="autocomplete-item"
-                      @mousedown.prevent="selectSuggestion(idx, suggestion)"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                      </svg>
-                      {{ suggestion }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-            <button class="btn btn-secondary add-form__add-more" @click="addPastActivity">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Tambah Kegiatan Lain
-            </button>
-          </div>
-          <p v-if="showErrors && !hasActivity" class="validation-error">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            Minimal 1 kegiatan minggu ini harus diisi.
-          </p>
-        </div>
-
-        <hr class="section-divider" />
 
 
         <div class="section-container">
@@ -139,6 +64,7 @@
                     @blur="hideTargetSuggestions(idx)"
                     placeholder="Ketik target untuk minggu depan..."
                     autocomplete="off"
+                    maxlength="500"
                   />
                   <div
                     v-if="showTargetSuggestions[idx] && filteredTargetSuggestions(idx).length > 0"
@@ -218,6 +144,16 @@ const props = defineProps({
   periode: { type: String, required: true },
 })
 
+function sanitizeInput(text) {
+  if (!text) return ''
+  let clean = text.substring(0, 500)
+  clean = clean.replace(/<[^>]*>/g, '')
+  if (clean.startsWith('=') || clean.startsWith('+') || clean.startsWith('-') || clean.startsWith('@')) {
+    clean = "'" + clean
+  }
+  return clean.trim()
+}
+
 const emit = defineEmits(['submit', 'cancel'])
 
 const employees = config.employees
@@ -228,22 +164,19 @@ const toastVisible = ref(false)
 const toastMessage = ref('')
 let toastTimer = null
 
-const pastActivities = reactive([{ text: '' }])
 const futureTargets = reactive([{ text: '' }])
 
-const showSuggestions = reactive({})
 const showTargetSuggestions = reactive({})
 
 const selectedEmployeeData = computed(() =>
   employees.find(e => String(e.id) === String(selectedEmployee.value))
 )
 
-const hasActivity = computed(() => pastActivities.some(a => a.text.trim().length > 0))
 const hasTarget = computed(() => futureTargets.some(t => t.text.trim().length > 0))
 
 const isValid = computed(() => {
   if (!selectedEmployee.value) return false
-  return hasActivity.value && hasTarget.value
+  return hasTarget.value
 })
 
 function showToast(message) {
@@ -253,29 +186,8 @@ function showToast(message) {
   toastTimer = setTimeout(() => { toastVisible.value = false }, 4000)
 }
 
-function addPastActivity() { pastActivities.push({ text: '' }) }
-function removePastActivity(idx) { pastActivities.splice(idx, 1) }
-
 function addFutureTarget() { futureTargets.push({ text: '' }) }
 function removeFutureTarget(idx) { futureTargets.splice(idx, 1) }
-
-function onKegiatanInput(idx) { showSuggestions[idx] = true }
-
-function hideSuggestions(idx) {
-  setTimeout(() => { showSuggestions[idx] = false }, 200)
-}
-
-function filteredSuggestions(idx) {
-  const query = pastActivities[idx].text.toLowerCase().trim()
-  const list = props.suggestions.kegiatan || []
-  if (!query) return list
-  return list.filter(s => s.toLowerCase().includes(query))
-}
-
-function selectSuggestion(idx, suggestion) {
-  pastActivities[idx].text = suggestion
-  showSuggestions[idx] = false
-}
 
 function onTargetInput(idx) { showTargetSuggestions[idx] = true }
 
@@ -303,14 +215,6 @@ async function handleSubmit() {
     return
   }
 
-  if (!hasActivity.value && !hasTarget.value) {
-    showToast('Kegiatan minggu ini dan target minggu depan wajib diisi minimal masing-masing 1.')
-    return
-  }
-  if (!hasActivity.value) {
-    showToast('Minimal 1 kegiatan minggu ini harus diisi.')
-    return
-  }
   if (!hasTarget.value) {
     showToast('Minimal 1 target minggu depan harus diisi.')
     return
@@ -320,18 +224,11 @@ async function handleSubmit() {
 
   submitting.value = true
   
-  const validActivities = pastActivities.map(a => a.text.trim()).filter(Boolean)
-  const validTargets = futureTargets.map(t => t.text.trim()).filter(Boolean)
-
-  const maxLength = Math.max(validActivities.length, validTargets.length)
-  const finalActivities = []
-
-  for (let i = 0; i < maxLength; i++) {
-    finalActivities.push({
-      kegiatan: validActivities[i] || '',
-      target: validTargets[i] || ''
-    })
-  }
+  const validTargets = futureTargets.map(t => sanitizeInput(t.text)).filter(Boolean)
+  const finalActivities = validTargets.map(target => ({
+    kegiatan: '',
+    target: target
+  }))
 
   const data = {
     periode: props.periode,
