@@ -6,6 +6,19 @@
         <p>Isikan target aktivitas untuk minggu depan.</p>
       </div>
 
+      <!-- Himbauan Pengisian -->
+      <div class="himbauan-card">
+        <div class="himbauan-card__icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        </div>
+        <div class="himbauan-card__content">
+          <strong>Himbauan Pengisian:</strong> Isilah target aktivitas dengan kalimat formal bahasa Indonesia yang baik dan benar (diawali kata kerja berimbuhan, misal: <em>Melakukan...</em>, <em>Membuat...</em>, <em>Mengikuti...</em>). Sistem akan melakukan pengecekan ejaan secara otomatis.
+        </div>
+      </div>
 
       <div class="form-group mb-8">
         <label class="form-label" for="employee-select">Nama Pegawai</label>
@@ -27,8 +40,30 @@
 
       <div v-if="selectedEmployee" class="animate-fade-in-up">
 
-
-
+        <!-- Monday Attendance Selection -->
+        <div class="form-group mb-8">
+          <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Kehadiran Hari Senin ({{ nextMondayDate }})
+          </label>
+          <div class="attendance-options">
+            <label class="attendance-option option-hadir" :class="{ active: attendance === 'Hadir' }">
+              <input type="radio" v-model="attendance" value="Hadir" />
+              <span class="option-dot"></span>
+              Hadir
+            </label>
+            <label class="attendance-option option-cuti" :class="{ active: attendance === 'Cuti' }">
+              <input type="radio" v-model="attendance" value="Cuti" />
+              <span class="option-dot"></span>
+              Cuti
+            </label>
+          </div>
+        </div>
 
         <div class="section-container">
           <h3 class="section-title section-title--target">Target Minggu Depan</h3>
@@ -52,7 +87,6 @@
                 </button>
               </div>
 
-
               <div class="form-group">
                 <div class="autocomplete-wrapper">
                   <input
@@ -61,7 +95,7 @@
                     v-model="target.text"
                     @input="onTargetInput(idx)"
                     @focus="showTargetSuggestions[idx] = true"
-                    @blur="hideTargetSuggestions(idx)"
+                    @blur="onTargetBlur(idx)"
                     placeholder="Ketik target untuk minggu depan..."
                     autocomplete="off"
                     maxlength="500"
@@ -84,9 +118,18 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Grammar / Typo Warning -->
+                <div v-if="target.warning" class="grammar-warning">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <span>{{ target.warning }}</span>
+                </div>
               </div>
             </div>
-
 
             <button class="btn btn-secondary add-form__add-more" @click="addFutureTarget">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -105,7 +148,6 @@
             Minimal 1 target minggu depan harus diisi.
           </p>
         </div>
-
 
         <div class="add-form__actions">
           <button class="btn btn-ghost" @click="$emit('cancel')">Batal</button>
@@ -138,6 +180,8 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { config } from '../config'
+import { parseISO, formatDate } from '../utils/dateUtils'
+import { checkIndonesianGrammar } from '../utils/grammarChecker'
 
 const props = defineProps({
   suggestions: { type: Object, default: () => ({ kegiatan: [], target: [] }) },
@@ -158,19 +202,27 @@ const emit = defineEmits(['submit', 'cancel'])
 
 const employees = config.employees
 const selectedEmployee = ref('')
+const attendance = ref('Hadir')
 const submitting = ref(false)
 const showErrors = ref(false)
 const toastVisible = ref(false)
 const toastMessage = ref('')
 let toastTimer = null
 
-const futureTargets = reactive([{ text: '' }])
-
+const futureTargets = reactive([{ text: '', warning: '', suggestions: [] }])
 const showTargetSuggestions = reactive({})
+const debouncers = {}
 
 const selectedEmployeeData = computed(() =>
   employees.find(e => String(e.id) === String(selectedEmployee.value))
 )
+
+const nextMondayDate = computed(() => {
+  if (!props.periode) return ''
+  const d = parseISO(props.periode)
+  d.setDate(d.getDate() + 1) // Sunday -> Monday
+  return formatDate(d)
+})
 
 const hasTarget = computed(() => futureTargets.some(t => t.text.trim().length > 0))
 
@@ -186,13 +238,46 @@ function showToast(message) {
   toastTimer = setTimeout(() => { toastVisible.value = false }, 4000)
 }
 
-function addFutureTarget() { futureTargets.push({ text: '' }) }
-function removeFutureTarget(idx) { futureTargets.splice(idx, 1) }
+function addFutureTarget() { 
+  futureTargets.push({ text: '', warning: '', suggestions: [] }) 
+}
 
-function onTargetInput(idx) { showTargetSuggestions[idx] = true }
+function removeFutureTarget(idx) { 
+  futureTargets.splice(idx, 1) 
+  if (debouncers[idx]) {
+    clearTimeout(debouncers[idx])
+    delete debouncers[idx]
+  }
+}
 
-function hideTargetSuggestions(idx) {
-  setTimeout(() => { showTargetSuggestions[idx] = false }, 200)
+function checkTargetGrammar(idx) {
+  const target = futureTargets[idx]
+  if (!target) return
+  const result = checkIndonesianGrammar(target.text)
+  target.warning = result.warning
+  target.suggestions = result.suggestions
+}
+
+function onTargetInput(idx) { 
+  showTargetSuggestions[idx] = true 
+  
+  if (futureTargets[idx].text.trim().length === 0) {
+    futureTargets[idx].warning = ''
+    futureTargets[idx].suggestions = []
+    return
+  }
+
+  if (debouncers[idx]) clearTimeout(debouncers[idx])
+  debouncers[idx] = setTimeout(() => {
+    checkTargetGrammar(idx)
+  }, 800)
+}
+
+function onTargetBlur(idx) {
+  setTimeout(() => { 
+    showTargetSuggestions[idx] = false 
+  }, 200)
+  checkTargetGrammar(idx)
 }
 
 function filteredTargetSuggestions(idx) {
@@ -205,6 +290,7 @@ function filteredTargetSuggestions(idx) {
 function selectTargetSuggestion(idx, suggestion) {
   futureTargets[idx].text = suggestion
   showTargetSuggestions[idx] = false
+  checkTargetGrammar(idx)
 }
 
 async function handleSubmit() {
@@ -235,6 +321,7 @@ async function handleSubmit() {
     pegawai_id: selectedEmployee.value,
     pegawai_nama: selectedEmployeeData.value?.name || '',
     activities: finalActivities,
+    kehadiran: attendance.value,
   }
 
   emit('submit', data)
@@ -252,7 +339,7 @@ async function handleSubmit() {
 }
 
 .add-form__header {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .add-form__header h2 {
@@ -268,18 +355,124 @@ async function handleSubmit() {
   color: var(--color-text-secondary);
 }
 
+/* Himbauan Card */
+.himbauan-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-primary-lighter);
+  border: 1px solid var(--color-primary-light);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-6);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.himbauan-card__icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
+}
+
+/* Attendance Selector */
+.attendance-options {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.attendance-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+  background: var(--color-surface);
+}
+
+.attendance-option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.option-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  transition: all var(--transition-fast);
+}
+
+.option-hadir:hover {
+  border-color: var(--color-success);
+  background: var(--color-primary-lighter);
+  color: var(--color-success);
+}
+.option-hadir.active {
+  border-color: var(--color-success);
+  background: var(--color-primary-lighter);
+  color: var(--color-success);
+}
+.option-hadir.active .option-dot {
+  background: var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
+}
+
+.option-cuti:hover {
+  border-color: var(--color-warning);
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+.option-cuti.active {
+  border-color: var(--color-warning);
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+.option-cuti.active .option-dot {
+  background: var(--color-warning);
+  box-shadow: 0 0 6px var(--color-warning);
+}
+
+/* Grammar Warning */
+.grammar-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-warning);
+  background: var(--color-warning-light);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-sm);
+  line-height: 1.4;
+}
+
+.grammar-warning svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .mb-8 {
   margin-bottom: var(--space-8);
 }
 
 .section-container {
   margin-bottom: var(--space-6);
-}
-
-.section-divider {
-  border: none;
-  border-top: 1px dashed var(--color-border);
-  margin: var(--space-8) 0;
 }
 
 .section-title {

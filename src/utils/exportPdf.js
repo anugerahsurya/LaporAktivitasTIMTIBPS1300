@@ -48,11 +48,45 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(11)
 
+  const attendanceMap = {}
+  const filledIds = new Set()
+  activities.forEach(act => {
+    const empId = String(act.pegawai_id)
+    filledIds.add(empId)
+    if (act.kehadiran) {
+      attendanceMap[empId] = act.kehadiran
+    }
+  })
+
+  let countHadir = 0
+  let countCuti = 0
+  let countBelumIsi = 0
+
+  config.employees.forEach(emp => {
+    const empId = String(emp.id)
+    const filled = filledIds.has(empId)
+    if (!filled) {
+      countBelumIsi++
+    } else {
+      const kehadiran = attendanceMap[empId] || 'Hadir'
+      if (kehadiran === 'Hadir') {
+        countHadir++
+      } else if (kehadiran === 'Cuti') {
+        countCuti++
+      }
+    }
+  })
+
+  const displayHadir = countHadir > 0 ? countHadir : '-'
+  const displayCuti = countCuti > 0 ? countCuti : '-'
+  const displayBelumIsi = countBelumIsi > 0 ? countBelumIsi : '-'
+
   const infoData = [
     ['Periode', `: ${periodLabel}`],
     ['Range Kegiatan', `: ${activityRange.start} s/d ${activityRange.end}`],
     ['Ketua Tim', `: ${config.team.leader}`],
     ['Anggota Tim', `: ${config.employees.filter(e => e.role !== 'Ketua Tim').map(e => e.name).join(', ')}`],
+    ['Kehadiran Senin Depan', `: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Belum Isi: ${displayBelumIsi}`],
   ]
 
   infoData.forEach(([label, value]) => {

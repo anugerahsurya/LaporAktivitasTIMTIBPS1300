@@ -18,7 +18,8 @@ function mergeActivities(periode, currentActs, prevActs) {
         empId,
         empNama: act.pegawai_nama,
         targets: [],
-        originalRows: []
+        originalRows: [],
+        kehadiran: act.kehadiran || ''
       }
     }
     currentByEmployee[empId].originalRows.push(act)
@@ -57,7 +58,8 @@ function mergeActivities(periode, currentActs, prevActs) {
         target_minggu_depan: currentTargets[i] || '',
         pegawai_id: emp.empId,
         pegawai_nama: emp.empNama,
-        created_at: emp.originalRows[i]?.created_at || new Date().toISOString()
+        created_at: emp.originalRows[i]?.created_at || new Date().toISOString(),
+        kehadiran: emp.kehadiran || ''
       })
     }
   })
@@ -149,6 +151,7 @@ export function useApi() {
           pegawai_id: activityData.pegawai_id,
           pegawai_nama: activityData.pegawai_nama,
           created_at: new Date().toISOString(),
+          kehadiran: activityData.kehadiran || ''
         }))
         all.push(...newActivities)
         setLocalData('activities', all)
@@ -245,23 +248,45 @@ Instruksi spesifik:
         throw new Error('API Key Gemini tidak ditemukan di .env (VITE_GEMINI_API_KEY).')
       }
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${config.geminiApiKey}`
-      const payload = {
-        contents: [{ parts: [{ text: prompt }] }]
+      const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-3.5-flash']
+      let lastError = null
+      let summary = ''
+
+      for (const model of models) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.geminiApiKey}`
+          const payload = {
+            contents: [{ parts: [{ text: prompt }] }]
+          }
+
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}))
+            throw new Error(errData?.error?.message || `HTTP error! status: ${res.status}`)
+          }
+
+          const data = await res.json()
+          if (data.error) throw new Error(data.error.message)
+
+          summary = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+          if (summary) {
+            break
+          }
+        } catch (e) {
+          console.warn(`Gagal menggunakan model ${model}: ${e.message}`)
+          lastError = e.message
+        }
       }
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+      if (!summary) {
+        throw new Error(lastError || 'Gagal menghubungi server Gemini.')
+      }
 
-      const data = await res.json()
-      
-      if (data.error) throw new Error(data.error.message)
-      
-      const summary = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
-      
       loading.value = false
       return summary
     } catch (e) {

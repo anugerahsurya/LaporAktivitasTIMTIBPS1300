@@ -17,12 +17,46 @@ export function exportToExcel(activities, periodLabel) {
     'Kontributor': item.contributors.join(', '),
   }))
 
+  const attendanceMap = {}
+  const filledIds = new Set()
+  activities.forEach(act => {
+    const empId = String(act.pegawai_id)
+    filledIds.add(empId)
+    if (act.kehadiran) {
+      attendanceMap[empId] = act.kehadiran
+    }
+  })
+
+  let countHadir = 0
+  let countCuti = 0
+  let countBelumIsi = 0
+
+  config.employees.forEach(emp => {
+    const empId = String(emp.id)
+    const filled = filledIds.has(empId)
+    if (!filled) {
+      countBelumIsi++
+    } else {
+      const kehadiran = attendanceMap[empId] || 'Hadir'
+      if (kehadiran === 'Hadir') {
+        countHadir++
+      } else if (kehadiran === 'Cuti') {
+        countCuti++
+      }
+    }
+  })
+
+  const displayHadir = countHadir > 0 ? countHadir : '-'
+  const displayCuti = countCuti > 0 ? countCuti : '-'
+  const displayBelumIsi = countBelumIsi > 0 ? countBelumIsi : '-'
+
   const wb = XLSX.utils.book_new()
   const wsRows = []
 
   wsRows.push([`REKAP AKTIVITAS MINGGUAN ${config.team.name.toUpperCase()}`])
   wsRows.push([`${config.team.institution}`])
   wsRows.push([`Periode: ${periodLabel}`])
+  wsRows.push([`Kehadiran Senin Depan: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Belum Isi: ${displayBelumIsi}`])
   wsRows.push([])
 
   if (kegiatanRows.length > 0) {
@@ -48,6 +82,7 @@ export function exportToExcel(activities, periodLabel) {
     { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
     { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
   ]
 
   ws['!cols'] = [
