@@ -14,12 +14,19 @@ Website pelaporan aktivitas mingguan Tim TI BPS Provinsi Sumatera Barat. Aplikas
    - Hasil penggabungan ini tampil secara real-time di tabel dashboard dan muncul secara otomatis saat diekspor.
 3. **Status Pengisian Pegawai**
    - Panel visual yang menunjukkan pegawai mana saja yang sudah/belum mengisi laporan di periode aktif.
-4. **AI-Powered Executive Summary (PDF)**
+4. **Verifikasi NIP (Login Akun Lokal)**
+   - Pengisian laporan diverifikasi dengan memasukkan NIP.
+   - NIP disimpan di `localStorage` lokal browser (`user_nip`) sehingga pegawai tidak perlu memilih atau menginput NIP lagi pada pengisian berikutnya.
+   - Disediakan fitur **"Ganti Akun"** untuk menghapus session lokal jika komputer digunakan bersama.
+5. **Status Kehadiran Hari Senin Lengkap**
+   - Pilihan status kehadiran mencakup **Hadir**, **Cuti**, dan **Izin**.
+   - Terintegrasi dengan visual grid dashboard, rekap PDF, dan ekspor Excel.
+6. **AI-Powered Executive Summary (PDF)**
    - Menggunakan Google Gemini API (lewat Google Apps Script) untuk menghasilkan ringkasan narasi eksekutif profesional dua paragraf secara otomatis.
-5. **Ekspor Laporan Profesional**
-   - **Excel (XLSX)**: Format tabel rapi dengan warna header kustom, border penuh, auto-width kolom, dan kolom kontributor yang ter-group.
-   - **PDF**: Format dokumen A4 resmi menggunakan font Cambria (sesuai standar laporan instansi), lengkap dengan header/footer dan narasi AI.
-6. **Dark & Light Mode**
+7. **Ekspor Laporan Profesional**
+   - **Excel (XLSX)**: Format tabel rapi dengan warna header kustom, rekap status kehadiran (Hadir/Cuti/Izin/Belum mengisi), border penuh, auto-width kolom, dan kolom kontributor yang ter-group.
+   - **PDF**: Format dokumen A4 resmi menggunakan font Cambria (sesuai standar laporan instansi), rekap status kehadiran yang dinamis (tidak saling bertumpuk), lengkap dengan header/footer dan narasi AI.
+8. **Dark & Light Mode**
    - Antarmuka premium dengan transisi warna halus menggunakan custom CSS variables.
 
 ---
@@ -41,21 +48,25 @@ Website pelaporan aktivitas mingguan Tim TI BPS Provinsi Sumatera Barat. Aplikas
 ```text
 d:\BPS\2. IPDS\11. Lapor Aktivitas Tim TI\
 ├── index.html                   # Entry HTML file
-├── package.json                 # Project dependencies & scripts
+├── package.json                 # Project dependencies & scripts (termasuk pre-script setup)
+├── setup-employees.js           # Script setup otomatis untuk data pegawai lokal
 ├── vite.config.js               # Vite configuration
 ├── .env                         # Environment variables (Gemini API Key, dll)
 ├── src/
 │   ├── main.js                  # Entry point Vue
 │   ├── App.vue                  # Root App component
-│   ├── config.js                # Konfigurasi pegawai, warna, dan Apps Script URL
+│   ├── config.js                # Konfigurasi warna, team metadata, dan Apps Script URL
+│   ├── data/
+│   │   ├── employees.js         # Data pegawai riil (lokal, ter-ignore Git)
+│   │   └── employees.example.js # Template data pegawai dummy (ter-push ke Git)
 │   ├── router/
 │   │   └── index.js             # Vue Router setup
 │   ├── assets/                  # CSS styles, variables, & fonts
 │   ├── components/              # Vue components
-│   │   ├── AddActivityForm.vue  # Form tambah laporan target
+│   │   ├── AddActivityForm.vue  # Form tambah laporan target (Verifikasi NIP & Kehadiran)
 │   │   ├── ActivityTable.vue    # Tabel rekapitulasi aktivitas & target
 │   │   ├── ExportButtons.vue    # Tombol ekspor (Excel & PDF)
-│   │   ├── EmployeeStatus.vue   # Panel status pengisian pegawai
+│   │   ├── EmployeeStatus.vue   # Panel status pengisian pegawai (Hadir, Cuti, Izin)
 │   │   └── PeriodSelector.vue   # Kontrol navigasi minggu/periode
 │   ├── composables/             # State logic / Custom hooks
 │   │   ├── useApi.js            # Fetch data & dynamic merging logic
@@ -81,11 +92,23 @@ VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```
 *Catatan: API key ini diperlukan untuk generator ringkasan AI pada ekspor PDF.*
 
-### 2. File `src/config.js`
-Gunakan file ini untuk menyesuaikan warna tema, daftar nama pegawai, peran, ketua tim, dan URL Apps Script Web App:
+### 2. Konfigurasi Data Pegawai Privat (`src/data/employees.js`)
+Untuk alasan keamanan data instansi, berkas berisi nama, role, dan NIP asli **di-ignore dari Git**.
+Saat pertama kali Anda menjalankan `npm run dev` atau `npm run build`, berkas `src/data/employees.js` akan disalin secara otomatis dari berkas `src/data/employees.example.js`.
+
+Silakan buka berkas lokal `src/data/employees.js` Anda dan sesuaikan data pegawainya:
+```javascript
+export const employees = [
+  { id: 1, nip: 'NIP_RIIL_PEGAWAI_1', name: 'Nama Pegawai 1', role: 'Anggota' },
+  // ...
+]
+```
+
+### 3. File `src/config.js`
+Gunakan file ini untuk menyesuaikan warna tema, metadata tim (Ketua Tim, instansi), dan URL Apps Script Web App:
 ```javascript
 export const config = {
-  // Pengaturan warna tema, daftar nama pegawai, ketua tim, dll.
+  // Pengaturan warna tema, metadata tim, dll.
   apiUrl: 'URL_WEB_APP_APPS_SCRIPT_ANDA',
 };
 ```

@@ -2,8 +2,8 @@
   <div class="add-form">
     <div class="add-form__card card">
       <div class="add-form__header">
-        <h2>Tambah Laporan</h2>
-        <p>Isikan target aktivitas untuk minggu depan.</p>
+        <h2>{{ isEditMode ? 'Edit Laporan' : 'Tambah Laporan' }}</h2>
+        <p>{{ isEditMode ? 'Perbarui target aktivitas Anda untuk minggu depan.' : 'Isikan target aktivitas untuk minggu depan.' }}</p>
       </div>
 
       <!-- Himbauan Pengisian -->
@@ -20,145 +20,180 @@
         </div>
       </div>
 
-      <div class="form-group mb-8">
-        <label class="form-label" for="employee-select">Nama Pegawai</label>
-        <select
-          id="employee-select"
-          class="form-select"
-          v-model="selectedEmployee"
-        >
-          <option value="" disabled>— Pilih Pegawai —</option>
-          <option
-            v-for="emp in employees"
-            :key="emp.id"
-            :value="emp.id"
-          >
-            {{ emp.name }} ({{ emp.role }})
-          </option>
-        </select>
-      </div>
-
-      <div v-if="selectedEmployee" class="animate-fade-in-up">
-
-        <!-- Monday Attendance Selection -->
-        <div class="form-group mb-8">
-          <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            Kehadiran Hari Senin ({{ nextMondayDate }})
-          </label>
-          <div class="attendance-options">
-            <label class="attendance-option option-hadir" :class="{ active: attendance === 'Hadir' }">
-              <input type="radio" v-model="attendance" value="Hadir" />
-              <span class="option-dot"></span>
-              Hadir
-            </label>
-            <label class="attendance-option option-cuti" :class="{ active: attendance === 'Cuti' }">
-              <input type="radio" v-model="attendance" value="Cuti" />
-              <span class="option-dot"></span>
-              Cuti
-            </label>
-          </div>
-        </div>
-
-        <div class="section-container">
-          <h3 class="section-title section-title--target">Target Minggu Depan</h3>
-          <div class="add-form__activities">
-            <div
-              v-for="(target, idx) in futureTargets"
-              :key="'target-'+idx"
-              class="activity-entry card"
-            >
-              <div class="activity-entry__header">
-                <span class="activity-entry__number activity-entry__number--target">Target {{ idx + 1 }}</span>
-                <button
-                  class="btn btn-ghost btn-sm"
-                  @click="removeFutureTarget(idx)"
-                  title="Hapus target"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  </svg>
-                </button>
-              </div>
-
-              <div class="form-group">
-                <div class="autocomplete-wrapper">
-                  <input
-                    class="form-input"
-                    type="text"
-                    v-model="target.text"
-                    @input="onTargetInput(idx)"
-                    @focus="showTargetSuggestions[idx] = true"
-                    @blur="onTargetBlur(idx)"
-                    placeholder="Ketik target untuk minggu depan..."
-                    autocomplete="off"
-                    maxlength="500"
-                  />
-                  <div
-                    v-if="showTargetSuggestions[idx] && filteredTargetSuggestions(idx).length > 0"
-                    class="autocomplete-dropdown"
-                  >
-                    <div
-                      v-for="suggestion in filteredTargetSuggestions(idx)"
-                      :key="suggestion"
-                      class="autocomplete-item"
-                      @mousedown.prevent="selectTargetSuggestion(idx, suggestion)"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                      </svg>
-                      {{ suggestion }}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Grammar / Typo Warning -->
-                <div v-if="target.warning" class="grammar-warning">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
-                  </svg>
-                  <span>{{ target.warning }}</span>
-                </div>
-              </div>
-            </div>
-
-            <button class="btn btn-secondary add-form__add-more" @click="addFutureTarget">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Tambah Target Lain
+      <!-- Form Input NIP (Verifikasi Identitas) -->
+      <div v-if="!isVerified" class="verification-section">
+        <div class="form-group mb-6">
+          <label class="form-label" for="nip-input">Masukkan NIP Anda</label>
+          <div class="input-with-action">
+            <input
+              id="nip-input"
+              class="form-input"
+              type="text"
+              inputmode="numeric"
+              v-model="nipInput"
+              placeholder="Masukkan 18 digit NIP Anda..."
+              @keyup.enter="verifyNip"
+              maxlength="30"
+            />
+            <button class="btn btn-primary" @click="verifyNip" type="button">
+              Verifikasi
             </button>
           </div>
-          <p v-if="showErrors && !hasTarget" class="validation-error">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            Minimal 1 target minggu depan harus diisi.
-          </p>
+          <p class="form-help-text">Masukkan NIP untuk mulai mengisi target kegiatan Anda.</p>
         </div>
+      </div>
 
-        <div class="add-form__actions">
-          <button class="btn btn-ghost" @click="$emit('cancel')">Batal</button>
-          <button
-            class="btn btn-primary btn-lg"
-            @click="handleSubmit"
-            :disabled="submitting"
-          >
-            <span v-if="submitting" class="spinner-small"></span>
-            {{ submitting ? 'Menyimpan...' : 'Submit Laporan' }}
-          </button>
+      <div v-else class="animate-fade-in-up">
+        <div v-if="loadingExisting" class="loading-existing">
+          <div class="spinner-small"></div>
+          <p>Memuat data laporan Anda...</p>
+        </div>
+        <div v-else>
+          <!-- Card Profil Pegawai -->
+          <div class="user-profile-card">
+            <div class="user-profile-card__avatar">
+              {{ verifiedEmployeeData?.name?.charAt(0) }}
+            </div>
+            <div class="user-profile-card__info">
+              <span class="user-profile-card__label">Mengisi Laporan Sebagai</span>
+              <h3 class="user-profile-card__name">{{ verifiedEmployeeData?.name }}</h3>
+              <p class="user-profile-card__role">{{ verifiedEmployeeData?.role }} — NIP: {{ verifiedEmployeeData?.nip || '-' }}</p>
+            </div>
+            <button class="btn btn-ghost btn-sm user-profile-card__logout" @click="handleLogout" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Ganti Akun
+            </button>
+          </div>
+
+          <!-- Monday Attendance Selection -->
+          <div class="form-group mb-8">
+            <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Kehadiran Hari Senin ({{ nextMondayDate }})
+            </label>
+            <div class="attendance-options">
+              <label class="attendance-option option-hadir" :class="{ active: attendance === 'Hadir' }">
+                <input type="radio" v-model="attendance" value="Hadir" />
+                <span class="option-dot"></span>
+                Hadir
+              </label>
+              <label class="attendance-option option-cuti" :class="{ active: attendance === 'Cuti' }">
+                <input type="radio" v-model="attendance" value="Cuti" />
+                <span class="option-dot"></span>
+                Cuti
+              </label>
+              <label class="attendance-option option-izin" :class="{ active: attendance === 'Izin' }">
+                <input type="radio" v-model="attendance" value="Izin" />
+                <span class="option-dot"></span>
+                Izin
+              </label>
+            </div>
+          </div>
+
+          <div class="section-container">
+            <h3 class="section-title section-title--target">Target Minggu Depan</h3>
+            <div class="add-form__activities">
+              <div
+                v-for="(target, idx) in futureTargets"
+                :key="'target-'+idx"
+                class="activity-entry card"
+              >
+                <div class="activity-entry__header">
+                  <span class="activity-entry__number activity-entry__number--target">Target {{ idx + 1 }}</span>
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    @click="removeFutureTarget(idx)"
+                    title="Hapus target"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <div class="form-group">
+                  <div class="autocomplete-wrapper">
+                    <input
+                      class="form-input"
+                      type="text"
+                      v-model="target.text"
+                      @input="onTargetInput(idx)"
+                      @focus="showTargetSuggestions[idx] = true"
+                      @blur="onTargetBlur(idx)"
+                      placeholder="Ketik target untuk minggu depan..."
+                      autocomplete="off"
+                      maxlength="500"
+                    />
+                    <div
+                      v-if="showTargetSuggestions[idx] && filteredTargetSuggestions(idx).length > 0"
+                      class="autocomplete-dropdown"
+                    >
+                      <div
+                        v-for="suggestion in filteredTargetSuggestions(idx)"
+                        :key="suggestion"
+                        class="autocomplete-item"
+                        @mousedown.prevent="selectTargetSuggestion(idx, suggestion)"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="11" cy="11" r="8"/>
+                          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        {{ suggestion }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Grammar / Typo Warning -->
+                  <div v-if="target.warning" class="grammar-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <span>{{ target.warning }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button class="btn btn-secondary add-form__add-more" @click="addFutureTarget">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Tambah Target Lain
+              </button>
+            </div>
+            <p v-if="showErrors && !hasTarget" class="validation-error">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              Minimal 1 target minggu depan harus diisi.
+            </p>
+          </div>
+
+          <div class="add-form__actions">
+            <button class="btn btn-ghost" @click="$emit('cancel')">Batal</button>
+            <button
+              class="btn btn-primary btn-lg"
+              @click="handleSubmit"
+              :disabled="submitting"
+            >
+              <span v-if="submitting" class="spinner-small"></span>
+              {{ submitting ? 'Menyimpan...' : (isEditMode ? 'Simpan Perubahan' : 'Submit Laporan') }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -178,10 +213,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { config } from '../config'
 import { parseISO, formatDate } from '../utils/dateUtils'
 import { checkIndonesianGrammar } from '../utils/grammarChecker'
+import { useApi } from '../composables/useApi'
 
 const props = defineProps({
   suggestions: { type: Object, default: () => ({ kegiatan: [], target: [] }) },
@@ -200,8 +236,14 @@ function sanitizeInput(text) {
 
 const emit = defineEmits(['submit', 'cancel'])
 
-const employees = config.employees
+const { verifyNip: verifyNipApi, getActivities, deleteActivity } = useApi()
+
 const selectedEmployee = ref('')
+const nipInput = ref('')
+const isVerified = ref(false)
+const verifiedEmployeeData = ref(null)
+const loadingExisting = ref(false)
+const existingIds = ref([])
 const attendance = ref('Hadir')
 const submitting = ref(false)
 const showErrors = ref(false)
@@ -213,9 +255,109 @@ const futureTargets = reactive([{ text: '', warning: '', suggestions: [] }])
 const showTargetSuggestions = reactive({})
 const debouncers = {}
 
-const selectedEmployeeData = computed(() =>
-  employees.find(e => String(e.id) === String(selectedEmployee.value))
-)
+async function loadExistingActivities() {
+  if (!selectedEmployee.value) return
+  loadingExisting.value = true
+  try {
+    const currentActs = await getActivities(props.periode, false)
+    const myActs = currentActs.filter(act => String(act.pegawai_id) === String(selectedEmployee.value))
+    
+    if (myActs.length > 0) {
+      existingIds.value = myActs.map(act => act.id)
+      
+      // Load Kehadiran
+      if (myActs[0].kehadiran) {
+        attendance.value = myActs[0].kehadiran
+      }
+      
+      // Load Targets
+      futureTargets.length = 0
+      myActs.forEach(act => {
+        if (act.target_minggu_depan) {
+          futureTargets.push({
+            text: act.target_minggu_depan,
+            warning: '',
+            suggestions: []
+          })
+        }
+      })
+      
+      if (futureTargets.length === 0) {
+        futureTargets.push({ text: '', warning: '', suggestions: [] })
+      }
+    } else {
+      existingIds.value = []
+    }
+  } catch (e) {
+    console.error('Gagal mengambil data kegiatan yang ada:', e)
+    showToast('Gagal memuat data kegiatan sebelumnya. Anda tetap bisa mengisi baru.')
+  } finally {
+    loadingExisting.value = false
+  }
+}
+
+onMounted(async () => {
+  const savedNip = localStorage.getItem('user_nip')
+  if (savedNip) {
+    submitting.value = true
+    try {
+      const result = await verifyNipApi(savedNip)
+      if (result.success) {
+        verifiedEmployeeData.value = result.employee
+        selectedEmployee.value = result.employee.id
+        isVerified.value = true
+        await loadExistingActivities()
+      } else {
+        localStorage.removeItem('user_nip')
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      submitting.value = false
+    }
+  }
+})
+
+async function verifyNip() {
+  const input = nipInput.value.trim()
+  if (!input) {
+    showToast('Silakan masukkan NIP Anda terlebih dahulu.')
+    return
+  }
+  submitting.value = true
+  try {
+    const result = await verifyNipApi(input)
+    if (result.success) {
+      localStorage.setItem('user_nip', result.employee.nip)
+      verifiedEmployeeData.value = result.employee
+      selectedEmployee.value = result.employee.id
+      isVerified.value = true
+      showErrors.value = false
+      await loadExistingActivities()
+    } else {
+      showToast(result.error || 'NIP tidak terdaftar. Hubungi admin atau periksa kembali NIP Anda.')
+    }
+  } catch (e) {
+    showToast('Gagal menghubungi server verifikasi.')
+  } finally {
+    submitting.value = false
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem('user_nip')
+  selectedEmployee.value = ''
+  nipInput.value = ''
+  isVerified.value = false
+  verifiedEmployeeData.value = null
+  existingIds.value = []
+  
+  attendance.value = 'Hadir'
+  futureTargets.length = 0
+  futureTargets.push({ text: '', warning: '', suggestions: [] })
+}
+
+const isEditMode = computed(() => existingIds.value.length > 0)
 
 const nextMondayDate = computed(() => {
   if (!props.periode) return ''
@@ -297,7 +439,7 @@ async function handleSubmit() {
   showErrors.value = true
 
   if (!selectedEmployee.value) {
-    showToast('Silakan pilih nama pegawai terlebih dahulu.')
+    showToast('Silakan verifikasi NIP Anda terlebih dahulu.')
     return
   }
 
@@ -310,21 +452,37 @@ async function handleSubmit() {
 
   submitting.value = true
   
-  const validTargets = futureTargets.map(t => sanitizeInput(t.text)).filter(Boolean)
-  const finalActivities = validTargets.map(target => ({
-    kegiatan: '',
-    target: target
-  }))
+  try {
+    if (isEditMode.value) {
+      for (const id of existingIds.value) {
+        await deleteActivity(id)
+      }
+    }
 
-  const data = {
-    periode: props.periode,
-    pegawai_id: selectedEmployee.value,
-    pegawai_nama: selectedEmployeeData.value?.name || '',
-    activities: finalActivities,
-    kehadiran: attendance.value,
+    const validTargets = futureTargets.map(t => sanitizeInput(t.text)).filter(Boolean)
+    const finalActivities = validTargets.map(target => ({
+      kegiatan: '',
+      target: target
+    }))
+
+    const data = {
+      periode: props.periode,
+      pegawai_id: selectedEmployee.value,
+      pegawai_nama: verifiedEmployeeData.value?.name || '',
+      activities: finalActivities,
+      kehadiran: attendance.value,
+    }
+
+    emit('submit', data, isEditMode.value, (success) => {
+      if (!success) {
+        submitting.value = false
+      }
+    })
+  } catch (e) {
+    console.error(e)
+    showToast('Terjadi kesalahan saat memproses laporan.')
+    submitting.value = false
   }
-
-  emit('submit', data)
 }
 </script>
 
@@ -676,5 +834,127 @@ async function handleSubmit() {
     padding: var(--space-3, 12px) var(--space-5, 20px);
     font-size: var(--font-size-xs, 12px);
   }
+}
+
+/* User Profile Card styling */
+.user-profile-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-8);
+  transition: all var(--transition-fast);
+}
+
+.user-profile-card__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--color-gradient-1), var(--color-gradient-2));
+  color: white;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2);
+}
+
+.user-profile-card__info {
+  flex-grow: 1;
+}
+
+.user-profile-card__label {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.user-profile-card__name {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.user-profile-card__role {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.user-profile-card__logout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.user-profile-card__logout:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+  border-color: var(--color-danger);
+}
+
+.input-with-action {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.input-with-action .form-input {
+  flex-grow: 1;
+}
+
+.form-help-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+}
+
+/* Attendance Option: Izin */
+.option-izin:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  color: #3b82f6;
+}
+.option-izin.active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  color: #3b82f6;
+}
+.option-izin.active .option-dot {
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+}
+
+.loading-existing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12) 0;
+  color: var(--color-text-secondary);
+  gap: var(--space-3);
+}
+
+.loading-existing .spinner-small {
+  border-color: rgba(22, 163, 74, 0.2);
+  border-top-color: var(--color-primary);
+  width: 24px;
+  height: 24px;
 }
 </style>

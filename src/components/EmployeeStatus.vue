@@ -13,6 +13,10 @@
             Cuti
           </span>
           <span class="legend-item">
+            <span class="legend-dot legend-dot--permission"></span>
+            Izin
+          </span>
+          <span class="legend-item">
             <span class="legend-dot legend-dot--unmarked"></span>
             Belum Isi
           </span>
@@ -33,9 +37,10 @@
         :class="{
           'employee-chip--present': emp.kehadiran === 'Hadir',
           'employee-chip--leave': emp.kehadiran === 'Cuti',
+          'employee-chip--permission': emp.kehadiran === 'Izin',
           'employee-chip--unmarked': emp.kehadiran === ''
         }"
-        :title="emp.kehadiran === 'Hadir' ? `${emp.name} (Hadir)` : (emp.kehadiran === 'Cuti' ? `${emp.name} (Cuti)` : `${emp.name} (Belum mengisi)`)"
+        :title="emp.kehadiran === 'Hadir' ? `${emp.name} (Hadir)` : (emp.kehadiran === 'Cuti' ? `${emp.name} (Cuti)` : (emp.kehadiran === 'Izin' ? `${emp.name} (Izin)` : `${emp.name} (Belum mengisi)`))"
       >
         <span class="employee-chip__indicator"></span>
         <span class="employee-chip__name">{{ emp.name }}</span>
@@ -48,6 +53,13 @@
           <line x1="16" y1="2" x2="16" y2="6"/>
           <line x1="8" y1="2" x2="8" y2="6"/>
           <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <svg v-else-if="emp.kehadiran === 'Izin'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
         </svg>
         <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"/>
@@ -160,6 +172,10 @@ const unfilledCount = computed(() => {
   background: var(--color-warning);
 }
 
+.legend-dot--permission {
+  background: #3b82f6;
+}
+
 .legend-dot--unmarked {
   background: var(--color-text-muted);
 }
@@ -194,6 +210,12 @@ const unfilledCount = computed(() => {
   border: 1.5px solid var(--color-warning);
 }
 
+.employee-chip--permission {
+  background: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+  border: 1.5px solid #3b82f6;
+}
+
 .employee-chip--unmarked {
   background: var(--color-border-light);
   color: var(--color-text-secondary);
@@ -218,6 +240,11 @@ const unfilledCount = computed(() => {
 .employee-chip--leave .employee-chip__indicator {
   background: var(--color-warning);
   box-shadow: 0 0 6px var(--color-warning);
+}
+
+.employee-chip--permission .employee-chip__indicator {
+  background: #3b82f6;
+  box-shadow: 0 0 6px #3b82f6;
 }
 
 .employee-chip--unmarked .employee-chip__indicator {

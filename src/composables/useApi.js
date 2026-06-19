@@ -293,7 +293,43 @@ Instruksi spesifik:
       error.value = e.message
       loading.value = false
       
-      return 'Catatan: Ringkasan narasi belum dapat di-generate karena Server AI Google sedang sibuk atau mengalami gangguan (Error 503). Silakan coba lagi beberapa saat kemudian.'
+      if (e.message.includes('API Key Gemini tidak ditemukan')) {
+        return `Catatan: Ringkasan narasi belum dapat di-generate. ${e.message} Pastikan API Key di file .env sudah benar, lalu restart server (matikan npm run dev lalu jalankan kembali).`
+      }
+      return `Catatan: Ringkasan narasi belum dapat di-generate. Detail: ${e.message}`
+    }
+  }
+
+  async function verifyNip(nip) {
+    loading.value = true
+    error.value = null
+    try {
+      if (isConnected) {
+        const res = await fetch(`${config.apiUrl}?action=verifyNip&nip=${nip}`)
+        const data = await res.json()
+        loading.value = false
+        return data
+      } else {
+        const { employees } = await import('../data/employees')
+        const matched = employees.find(e => String(e.nip) === String(nip))
+        loading.value = false
+        if (matched) {
+          return {
+            success: true,
+            employee: {
+              id: matched.id,
+              name: matched.name,
+              role: matched.role,
+              nip: matched.nip
+            }
+          }
+        }
+        return { success: false, error: 'NIP tidak terdaftar.' }
+      }
+    } catch (e) {
+      error.value = e.message
+      loading.value = false
+      return { success: false, error: e.message }
     }
   }
 
@@ -307,5 +343,7 @@ Instruksi spesifik:
     getPeriods,
     deleteActivity,
     generateSummary,
+    verifyNip,
   }
 }
+

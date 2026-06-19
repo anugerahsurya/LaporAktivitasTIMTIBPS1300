@@ -60,6 +60,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
 
   let countHadir = 0
   let countCuti = 0
+  let countIzin = 0
   let countBelumIsi = 0
 
   config.employees.forEach(emp => {
@@ -73,12 +74,15 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
         countHadir++
       } else if (kehadiran === 'Cuti') {
         countCuti++
+      } else if (kehadiran === 'Izin') {
+        countIzin++
       }
     }
   })
 
   const displayHadir = countHadir > 0 ? countHadir : '-'
   const displayCuti = countCuti > 0 ? countCuti : '-'
+  const displayIzin = countIzin > 0 ? countIzin : '-'
   const displayBelumIsi = countBelumIsi > 0 ? countBelumIsi : '-'
 
   const infoData = [
@@ -86,18 +90,19 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     ['Range Kegiatan', `: ${activityRange.start} s/d ${activityRange.end}`],
     ['Ketua Tim', `: ${config.team.leader}`],
     ['Anggota Tim', `: ${config.employees.filter(e => e.role !== 'Ketua Tim').map(e => e.name).join(', ')}`],
-    ['Kehadiran Senin Depan', `: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Belum Isi: ${displayBelumIsi}`],
+    ['Kehadiran Senin', `: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Izin: ${displayIzin} | Belum Isi: ${displayBelumIsi}`],
   ]
 
   infoData.forEach(([label, value]) => {
     doc.setFont('helvetica', 'bold')
     doc.text(label, margin, y)
     doc.setFont('helvetica', 'normal')
-    
-    doc.text(value, margin + 35, y, { maxWidth: contentWidth - 35 })
-    
-    const textLines = doc.splitTextToSize(value, contentWidth - 35)
-    y += (textLines.length * 6) + 1
+
+    doc.text(value, margin + 40, y, { maxWidth: contentWidth - 40, lineHeightFactor: 1.5 })
+
+    const textLines = doc.splitTextToSize(value, contentWidth - 40)
+    const lineHeight = 11 * 0.352778 * 1.5 // ~5.82 mm for font size 11
+    y += (textLines.length * lineHeight) + 2.5 // Add 2.5mm spacing to prevent any overlap
   })
 
   y += 5
@@ -117,7 +122,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
 
     autoTable(doc, {
       startY: y,
-      head: [['No', 'Kegiatan', 'Kontributor']],
+      head: [['No', 'Kegiatan', 'Nama Pegawai']],
       body: kegiatanData,
       theme: 'grid',
       styles: {
@@ -142,7 +147,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       margin: { left: margin, right: margin },
       didDrawPage: drawFooter,
     })
-    
+
     y = doc.lastAutoTable.finalY + 10
   }
 
@@ -166,7 +171,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
 
     autoTable(doc, {
       startY: y,
-      head: [['No', 'Target', 'Kontributor']],
+      head: [['No', 'Target', 'Nama Pegawai']],
       body: targetData,
       theme: 'grid',
       styles: {
@@ -207,16 +212,17 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
 
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(10)
-    
-    doc.text(summary, margin, y, { maxWidth: contentWidth, align: 'justify' })
-    
+
+    doc.text(summary, margin, y, { maxWidth: contentWidth, align: 'left', lineHeightFactor: 1.5 })
+
     const summaryLines = doc.splitTextToSize(summary, contentWidth)
-    y += (summaryLines.length * 5) + 6
+    const lineHeight = 10 * 0.352778 * 1.5 // ~5.29 mm for font size 10
+    y += (summaryLines.length * lineHeight) + 6
 
     doc.setFont('helvetica', 'italic')
     doc.setFontSize(8)
     doc.setTextColor(100, 100, 100)
-    doc.text('* Disclaimer: Ringkasan narasi di atas di-generate secara otomatis menggunakan teknologi AI (Google Gemini) berdasarkan daftar kegiatan yang ada.', margin, y, { maxWidth: contentWidth })
+    doc.text('* Disclaimer: Ringkasan narasi di atas di-generate secara otomatis menggunakan teknologi AI (Google Gemini) berdasarkan daftar kegiatan yang ada.', margin, y, { maxWidth: contentWidth, lineHeightFactor: 1.3 })
     doc.setTextColor(0, 0, 0)
   }
 

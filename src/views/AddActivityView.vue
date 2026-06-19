@@ -70,10 +70,15 @@ onMounted(async () => {
   suggestions.value = await getSuggestions(periodISO.value)
 })
 
-async function handleSubmit(data) {
+async function handleSubmit(data, isEdit, callback) {
   const result = await addActivity(data)
   if (result.success !== false) {
-    router.push({ path: '/', query: { added: 'true' } })
+    router.push({
+      path: '/',
+      query: isEdit ? { updated: 'true' } : { added: 'true' }
+    })
+  } else {
+    if (callback) callback(false)
   }
 }
 </script>

@@ -22,7 +22,7 @@
               <tr>
                 <th style="width: 50px;">No</th>
                 <th>Kegiatan</th>
-                <th style="width: 30%;">Kontributor</th>
+                <th style="width: 30%;">Nama Pegawai</th>
               </tr>
             </thead>
             <tbody>
@@ -62,7 +62,7 @@
               <tr>
                 <th style="width: 50px;">No</th>
                 <th>Target</th>
-                <th style="width: 30%;">Kontributor</th>
+                <th style="width: 30%;">Nama Pegawai</th>
               </tr>
             </thead>
             <tbody>

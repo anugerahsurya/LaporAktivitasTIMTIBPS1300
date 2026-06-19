@@ -8,13 +8,13 @@ export function exportToExcel(activities, periodLabel) {
   const kegiatanRows = groupedActivities.map((item, idx) => ({
     'No': idx + 1,
     'Uraian': item.text,
-    'Kontributor': item.contributors.join(', '),
+    'Nama Pegawai': item.contributors.join(', '),
   }))
 
   const targetRows = groupedTargets.map((item, idx) => ({
     'No': idx + 1,
     'Uraian': item.text,
-    'Kontributor': item.contributors.join(', '),
+    'Nama Pegawai': item.contributors.join(', '),
   }))
 
   const attendanceMap = {}
@@ -29,6 +29,7 @@ export function exportToExcel(activities, periodLabel) {
 
   let countHadir = 0
   let countCuti = 0
+  let countIzin = 0
   let countBelumIsi = 0
 
   config.employees.forEach(emp => {
@@ -42,12 +43,15 @@ export function exportToExcel(activities, periodLabel) {
         countHadir++
       } else if (kehadiran === 'Cuti') {
         countCuti++
+      } else if (kehadiran === 'Izin') {
+        countIzin++
       }
     }
   })
 
   const displayHadir = countHadir > 0 ? countHadir : '-'
   const displayCuti = countCuti > 0 ? countCuti : '-'
+  const displayIzin = countIzin > 0 ? countIzin : '-'
   const displayBelumIsi = countBelumIsi > 0 ? countBelumIsi : '-'
 
   const wb = XLSX.utils.book_new()
@@ -56,12 +60,12 @@ export function exportToExcel(activities, periodLabel) {
   wsRows.push([`REKAP AKTIVITAS MINGGUAN ${config.team.name.toUpperCase()}`])
   wsRows.push([`${config.team.institution}`])
   wsRows.push([`Periode: ${periodLabel}`])
-  wsRows.push([`Kehadiran Senin Depan: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Belum Isi: ${displayBelumIsi}`])
+  wsRows.push([`Kehadiran Senin Depan: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Izin: ${displayIzin} | Belum Isi: ${displayBelumIsi}`])
   wsRows.push([])
 
   if (kegiatanRows.length > 0) {
     wsRows.push(['AKTIVITAS SEMINGGU SEBELUMNYA'])
-    wsRows.push(['No', 'Kegiatan', 'Kontributor'])
+    wsRows.push(['No', 'Kegiatan', 'Nama Pegawai'])
     kegiatanRows.forEach(row => {
       wsRows.push([row.No, row.Uraian, row.Kontributor])
     })
@@ -70,7 +74,7 @@ export function exportToExcel(activities, periodLabel) {
 
   if (targetRows.length > 0) {
     wsRows.push(['TARGET MINGGU DEPAN'])
-    wsRows.push(['No', 'Target', 'Kontributor'])
+    wsRows.push(['No', 'Target', 'Nama Pegawai'])
     targetRows.forEach(row => {
       wsRows.push([row.No, row.Uraian, row.Kontributor])
     })
@@ -102,7 +106,7 @@ export function exportToExcel(activities, periodLabel) {
         alignment: { vertical: 'top', wrapText: true }
       }
 
-      if (ws[cell].v === 'No' || ws[cell].v === 'Kegiatan' || ws[cell].v === 'Target' || ws[cell].v === 'Kontributor') {
+      if (ws[cell].v === 'No' || ws[cell].v === 'Kegiatan' || ws[cell].v === 'Target' || ws[cell].v === 'Nama Pegawai') {
         ws[cell].s.font.bold = true
         ws[cell].s.fill = { fgColor: { rgb: config.export.headerColor.toUpperCase() } }
         ws[cell].s.font.color = { rgb: 'FFFFFF' }

@@ -30,3 +30,7 @@ dist-ssr
 
 # apps-script
 apps-script/
+
+# employee private data
+/src/data/employees.js
+
