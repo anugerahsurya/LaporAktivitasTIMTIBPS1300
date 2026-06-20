@@ -9,12 +9,14 @@ export function exportToExcel(activities, periodLabel, teamName = '', periodPref
     'No': idx + 1,
     'Uraian': item.text,
     'Nama Pegawai': item.contributors.join(', '),
+    'Keterangan Tim': (item.tim && item.tim !== 'lainnya') ? 'Tim Utama' : 'Tim Lainnya'
   }))
 
   const targetRows = groupedTargets.map((item, idx) => ({
     'No': idx + 1,
     'Uraian': item.text,
     'Nama Pegawai': item.contributors.join(', '),
+    'Keterangan Tim': (item.tim && item.tim !== 'lainnya') ? 'Tim Utama' : 'Tim Lainnya'
   }))
 
   const attendanceMap = {}
@@ -67,34 +69,35 @@ export function exportToExcel(activities, periodLabel, teamName = '', periodPref
 
   if (kegiatanRows.length > 0) {
     wsRows.push(['Kegiatan Minggu Lalu'])
-    wsRows.push(['No', 'Kegiatan', 'Nama Pegawai'])
+    wsRows.push(['No', 'Kegiatan', 'Nama Pegawai', 'Keterangan Tim'])
     kegiatanRows.forEach(row => {
-      wsRows.push([row.No, row.Uraian, row['Nama Pegawai']])
+      wsRows.push([row.No, row.Uraian, row['Nama Pegawai'], row['Keterangan Tim']])
     })
     wsRows.push([])
   }
 
   if (targetRows.length > 0) {
     wsRows.push(['Rencana Kegiatan Minggu Ini'])
-    wsRows.push(['No', 'Target', 'Nama Pegawai'])
+    wsRows.push(['No', 'Target', 'Nama Pegawai', 'Keterangan Tim'])
     targetRows.forEach(row => {
-      wsRows.push([row.No, row.Uraian, row['Nama Pegawai']])
+      wsRows.push([row.No, row.Uraian, row['Nama Pegawai'], row['Keterangan Tim']])
     })
   }
 
   const ws = XLSX.utils.aoa_to_sheet(wsRows)
 
   ws['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } },
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 3 } },
   ]
 
   ws['!cols'] = [
     { wch: 5 },
-    { wch: 60 },
+    { wch: 50 },
     { wch: 30 },
+    { wch: 18 },
   ]
 
   const range = XLSX.utils.decode_range(ws['!ref'])
@@ -108,7 +111,7 @@ export function exportToExcel(activities, periodLabel, teamName = '', periodPref
         alignment: { vertical: 'top', wrapText: true }
       }
 
-      if (ws[cell].v === 'No' || ws[cell].v === 'Kegiatan' || ws[cell].v === 'Target' || ws[cell].v === 'Nama Pegawai') {
+      if (ws[cell].v === 'No' || ws[cell].v === 'Kegiatan' || ws[cell].v === 'Target' || ws[cell].v === 'Nama Pegawai' || ws[cell].v === 'Keterangan Tim') {
         ws[cell].s.font.bold = true
         ws[cell].s.fill = { fgColor: { rgb: config.export.headerColor.toUpperCase() } }
         ws[cell].s.font.color = { rgb: 'FFFFFF' }
@@ -157,6 +160,7 @@ function groupActivities(activities, keyField) {
       map.set(key, {
         text: key,
         contributors: [act.pegawai_nama],
+        tim: act.tim
       })
     }
   })

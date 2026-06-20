@@ -121,11 +121,12 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       idx + 1,
       item.text,
       item.contributors.join(', '),
+      (item.tim && item.tim !== 'lainnya') ? 'Tim Utama' : 'Tim Lainnya'
     ])
 
     autoTable(doc, {
       startY: y,
-      head: [['No', 'Kegiatan', 'Nama Pegawai']],
+      head: [['No', 'Kegiatan', 'Nama Pegawai', 'Keterangan Tim']],
       body: kegiatanData,
       theme: 'grid',
       styles: {
@@ -170,11 +171,12 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       idx + 1,
       item.text,
       item.contributors.join(', '),
+      (item.tim && item.tim !== 'lainnya') ? 'Tim Utama' : 'Tim Lainnya'
     ])
 
     autoTable(doc, {
       startY: y,
-      head: [['No', 'Target', 'Nama Pegawai']],
+      head: [['No', 'Target', 'Nama Pegawai', 'Keterangan Tim']],
       body: targetData,
       theme: 'grid',
       styles: {
@@ -270,6 +272,7 @@ function groupActivities(activities, keyField) {
       map.set(key, {
         text: key,
         contributors: [act.pegawai_nama],
+        tim: act.tim
       })
     }
   })
