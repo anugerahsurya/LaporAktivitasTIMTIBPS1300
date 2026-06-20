@@ -72,12 +72,25 @@ const { generateSummary } = useApi()
 const teams = config.teams || []
 
 function getTeamActivities(teamId) {
-  return props.activities.filter(act => act.tim === teamId)
+  return props.activities.filter(act => {
+    if (act.tim === teamId) return true
+    
+    if (act.tim === 'lainnya') {
+      const empConfig = config.employees.find(e => String(e.id) === String(act.pegawai_id))
+      if (empConfig) {
+        const teamObj = config.teams.find(t => t.name === empConfig.team)
+        if (teamObj && teamObj.id === teamId) {
+          return true
+        }
+      }
+    }
+    return false
+  })
 }
 
 function getTeamName(teamId) {
   const team = teams.find(t => t.id === teamId)
-  return team ? team.name : 'Tim Lainnya'
+  return team ? team.name : ''
 }
 
 /**
@@ -113,13 +126,6 @@ function handleExportExcel() {
       exportToExcel(teamActs, props.periodLabel, team.name, prefix)
     }
   })
-
-  // Also export unassigned if any
-  const teamIds = teams.map(t => t.id)
-  const unassigned = props.activities.filter(act => !act.tim || !teamIds.includes(act.tim))
-  if (unassigned.length > 0) {
-    exportToExcel(unassigned, props.periodLabel, 'Tim Lainnya', prefix)
-  }
 }
 
 function openConfirmModal() {
@@ -148,19 +154,6 @@ async function confirmExportPdf() {
       }
       await exportToPdf(teamActs, props.periodLabel, props.activityRange, summary, team.name, prefix)
     }
-  }
-
-  // Also export unassigned if any
-  const teamIds = teams.map(t => t.id)
-  const unassigned = props.activities.filter(act => !act.tim || !teamIds.includes(act.tim))
-  if (unassigned.length > 0) {
-    let summary = ''
-    try {
-      summary = await generateSummary(unassigned)
-    } catch {
-      summary = ''
-    }
-    await exportToPdf(unassigned, props.periodLabel, props.activityRange, summary, 'Tim Lainnya', prefix)
   }
 
   loadingSummary.value = false

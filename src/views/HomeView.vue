@@ -68,17 +68,6 @@
           :team-name="team.name"
         />
       </div>
-
-      <!-- Activities without a team (backward compatibility) -->
-      <div
-        v-if="unassignedActivities.length > 0"
-        class="team-table-section animate-fade-in-up"
-      >
-        <ActivityTable
-          :activities="unassignedActivities"
-          team-name="Tim Lainnya"
-        />
-      </div>
     </template>
 
 
@@ -136,13 +125,20 @@ const toast = ref({ show: false, message: '', type: 'success' })
 const teams = config.teams || []
 
 function getTeamActivities(teamId) {
-  return activities.value.filter(act => act.tim === teamId)
+  return activities.value.filter(act => {
+    if (act.tim === teamId) return true
+    if (act.tim === 'lainnya') {
+      const empConfig = config.employees.find(e => String(e.id) === String(act.pegawai_id))
+      if (empConfig) {
+        const teamObj = config.teams.find(t => t.name === empConfig.team)
+        if (teamObj && teamObj.id === teamId) {
+          return true
+        }
+      }
+    }
+    return false
+  })
 }
-
-const unassignedActivities = computed(() => {
-  const teamIds = teams.map(t => t.id)
-  return activities.value.filter(act => !act.tim || !teamIds.includes(act.tim))
-})
 
 async function loadActivities() {
   activities.value = await getActivities(periodISO.value)

@@ -19,8 +19,7 @@ function mergeActivities(periode, currentActs, prevActs) {
         empNama: act.pegawai_nama,
         targets: [],
         originalRows: [],
-        kehadiran: act.kehadiran || '',
-        tim: act.tim || ''
+        kehadiran: act.kehadiran || ''
       }
     }
     currentByEmployee[empId].originalRows.push(act)
@@ -52,6 +51,17 @@ function mergeActivities(periode, currentActs, prevActs) {
     const maxLength = Math.max(prevTargets.length, currentTargets.length)
 
     for (let i = 0; i < maxLength; i++) {
+      const originalTim = emp.originalRows[i]?.tim || ''
+      let finalTim = originalTim
+      const validTeamIds = config.teams.map(t => t.id)
+      if (finalTim !== 'lainnya' && !validTeamIds.includes(finalTim)) {
+        const empConfig = config.employees.find(e => String(e.id) === String(emp.empId))
+        const teamObj = empConfig ? config.teams.find(t => t.name === empConfig.team) : null
+        if (teamObj) {
+          finalTim = teamObj.id
+        }
+      }
+
       merged.push({
         id: emp.originalRows[i]?.id || `ACT_${emp.empId}_${Date.now()}_${i}`,
         periode: periode,
@@ -61,7 +71,7 @@ function mergeActivities(periode, currentActs, prevActs) {
         pegawai_nama: emp.empNama,
         created_at: emp.originalRows[i]?.created_at || new Date().toISOString(),
         kehadiran: emp.kehadiran || '',
-        tim: emp.tim || ''
+        tim: finalTim
       })
     }
   })

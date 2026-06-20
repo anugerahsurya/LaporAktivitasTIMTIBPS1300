@@ -66,15 +66,15 @@ export const config = {
   employees: [
     { id: 1, name: 'Aan Subrata', role: 'Ketua Tim', nip: '198611042009121003', team: '-' },
     { id: 2, name: 'Ihsan Pratama', role: 'Anggota', nip: '198707092010121004', team: 'Tim Sistem Informasi Statistik' },
-    { id: 2, name: 'Tri Hayuni Syardi', role: 'Anggota', nip: '199010302012112001', team: 'Tim Metodologi Statistik dan Sains Data' },
-    { id: 3, name: 'Ryche Pranita', role: 'Anggota', nip: '199103172013112001', team: 'Tim Sistem Informasi Statistik' },
-    { id: 4, name: 'Benny Firmansyah', role: 'Anggota', nip: '199006122013111002', team: 'Tim Sistem Informasi Statistik' },
-    { id: 5, name: 'Hardini Juliarti', role: 'Anggota', nip: '199007282012112001', team: 'Tim Metodologi Statistik dan Sains Data' },
-    { id: 6, name: 'Hamdi Rafiqi', role: 'Anggota', nip: '199202012014121001', team: 'Tim Sistem Informasi Statistik' },
-    { id: 7, name: 'Ryan Oktarino', role: 'Anggota', nip: '198310042025211023', team: 'Tim Sistem Informasi Statistik' },
-    { id: 8, name: 'M. Hafiz Al Ihsan', role: 'Anggota', nip: '200010142023021002', team: 'Tim Metodologi Statistik dan Sains Data' },
-    { id: 9, name: 'Giani Jovita Jane', role: 'Anggota', nip: '200206142024122001', team: 'Tim Sistem Informasi Statistik' },
-    { id: 10, name: 'Anugerah Surya Atmaja', role: 'Anggota', nip: '200205092026031001', team: 'Tim Metodologi Statistik dan Sains Data' },
+    { id: 3, name: 'Tri Hayuni Syardi', role: 'Anggota', nip: '199010302012112001', team: 'Tim Metodologi Statistik dan Sains Data' },
+    { id: 4, name: 'Ryche Pranita', role: 'Anggota', nip: '199103172013112001', team: 'Tim Sistem Informasi Statistik' },
+    { id: 5, name: 'Benny Firmansyah', role: 'Anggota', nip: '199006122013111002', team: 'Tim Sistem Informasi Statistik' },
+    { id: 6, name: 'Hardini Juliarti', role: 'Anggota', nip: '199007282012112001', team: 'Tim Metodologi Statistik dan Sains Data' },
+    { id: 7, name: 'Hamdi Rafiqi', role: 'Anggota', nip: '199202012014121001', team: 'Tim Sistem Informasi Statistik' },
+    { id: 8, name: 'Ryan Oktarino', role: 'Anggota', nip: '198310042025211023', team: 'Tim Sistem Informasi Statistik' },
+    { id: 9, name: 'M. Hafiz Al Ihsan', role: 'Anggota', nip: '200010142023021002', team: 'Tim Metodologi Statistik dan Sains Data' },
+    { id: 10, name: 'Giani Jovita Jane', role: 'Anggota', nip: '200206142024122001', team: 'Tim Sistem Informasi Statistik' },
+    { id: 11, name: 'Anugerah Surya Atmaja', role: 'Anggota', nip: '200205092026031001', team: 'Tim Metodologi Statistik dan Sains Data' }
   ],
 
   team: {

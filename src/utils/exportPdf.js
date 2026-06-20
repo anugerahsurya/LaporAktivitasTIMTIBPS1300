@@ -121,7 +121,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       idx + 1,
       item.text,
       item.contributors.join(', '),
-      (item.tim && item.tim !== 'lainnya') ? 'Tim Utama' : 'Tim Lainnya'
+      item.tim === 'lainnya' ? 'Tim Lainnya' : 'Tim Utama'
     ])
 
     autoTable(doc, {
@@ -171,7 +171,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       idx + 1,
       item.text,
       item.contributors.join(', '),
-      (item.tim && item.tim !== 'lainnya') ? 'Tim Utama' : 'Tim Lainnya'
+      item.tim === 'lainnya' ? 'Tim Lainnya' : 'Tim Utama'
     ])
 
     autoTable(doc, {

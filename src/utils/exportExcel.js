@@ -9,14 +9,14 @@ export function exportToExcel(activities, periodLabel, teamName = '', periodPref
     'No': idx + 1,
     'Uraian': item.text,
     'Nama Pegawai': item.contributors.join(', '),
-    'Keterangan Tim': (item.tim && item.tim !== 'lainnya') ? 'Tim Utama' : 'Tim Lainnya'
+    'Keterangan Tim': item.tim === 'lainnya' ? 'Tim Lainnya' : 'Tim Utama'
   }))
 
   const targetRows = groupedTargets.map((item, idx) => ({
     'No': idx + 1,
     'Uraian': item.text,
     'Nama Pegawai': item.contributors.join(', '),
-    'Keterangan Tim': (item.tim && item.tim !== 'lainnya') ? 'Tim Utama' : 'Tim Lainnya'
+    'Keterangan Tim': item.tim === 'lainnya' ? 'Tim Lainnya' : 'Tim Utama'
   }))
 
   const attendanceMap = {}
