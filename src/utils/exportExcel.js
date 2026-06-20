@@ -67,7 +67,7 @@ export function exportToExcel(activities, periodLabel) {
     wsRows.push(['AKTIVITAS SEMINGGU SEBELUMNYA'])
     wsRows.push(['No', 'Kegiatan', 'Nama Pegawai'])
     kegiatanRows.forEach(row => {
-      wsRows.push([row.No, row.Uraian, row.Kontributor])
+      wsRows.push([row.No, row.Uraian, row['Nama Pegawai']])
     })
     wsRows.push([])
   }
@@ -76,7 +76,7 @@ export function exportToExcel(activities, periodLabel) {
     wsRows.push(['TARGET MINGGU DEPAN'])
     wsRows.push(['No', 'Target', 'Nama Pegawai'])
     targetRows.forEach(row => {
-      wsRows.push([row.No, row.Uraian, row.Kontributor])
+      wsRows.push([row.No, row.Uraian, row['Nama Pegawai']])
     })
   }
 

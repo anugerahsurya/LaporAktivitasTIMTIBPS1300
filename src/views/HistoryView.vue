@@ -74,21 +74,21 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
-import { getRecentPeriods, formatDateISO, formatDate, getActivityRange } from '../utils/dateUtils'
+import { parseISO, formatDate, getActivityRange } from '../utils/dateUtils'
 
 const router = useRouter()
-const { getActivities, loading } = useApi()
+const { getPeriods, getActivities, loading } = useApi()
 
 const BULAN_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
 
 const periods = ref([])
 
 onMounted(async () => {
-  const recentDates = getRecentPeriods(16)
+  const registeredPeriods = await getPeriods()
   const result = []
 
-  for (const date of recentDates) {
-    const iso = formatDateISO(date)
+  for (const iso of registeredPeriods) {
+    const date = parseISO(iso)
     const acts = await getActivities(iso)
     const range = getActivityRange(date)
     const uniqueActivities = [...new Set(acts.map(a => a.kegiatan))]

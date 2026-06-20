@@ -14,46 +14,6 @@
 
     <div v-else class="activity-sections">
 
-      <div v-if="groupedActivities.length > 0" class="table-section">
-        <h3 class="section-title">Aktivitas Seminggu Sebelumnya</h3>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 50px;">No</th>
-                <th>Kegiatan</th>
-                <th style="width: 30%;">Nama Pegawai</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(item, idx) in groupedActivities"
-                :key="item.text"
-                class="animate-fade-in-up"
-                :style="{ animationDelay: `${idx * 50}ms` }"
-              >
-                <td class="cell-no">{{ idx + 1 }}</td>
-                <td class="cell-kegiatan">
-                  <div class="kegiatan-text">{{ item.text }}</div>
-                </td>
-                <td class="cell-kontributor">
-                  <div class="kontributor-chips">
-                    <span
-                      v-for="name in item.contributors"
-                      :key="name"
-                      class="kontributor-chip"
-                    >
-                      {{ name }}
-                    </span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-
       <div v-if="groupedTargets.length > 0" class="table-section">
         <h3 class="section-title section-title--target">Target Minggu Depan</h3>
         <div class="table-wrapper">
