@@ -2,7 +2,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { config } from '../config'
 
-export async function exportToPdf(activities, periodLabel, activityRange, summary = '') {
+export async function exportToPdf(activities, periodLabel, activityRange, summary = '', teamName = '', periodPrefix = '') {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -25,17 +25,19 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
 
   y = 25
 
-  doc.setFont('helvetica', 'bold')
+  const displayTeamName = teamName || config.team.name
+
+  doc.setFont('times', 'bold')
   doc.setFontSize(14)
   doc.setTextColor(0, 0, 0)
   doc.text('LAPORAN AKTIVITAS MINGGUAN', pageWidth / 2, y, { align: 'center' })
   y += 7
 
   doc.setFontSize(12)
-  doc.text(config.team.name.toUpperCase(), pageWidth / 2, y, { align: 'center' })
+  doc.text(displayTeamName.toUpperCase(), pageWidth / 2, y, { align: 'center' })
   y += 7
 
-  doc.setFont('helvetica', 'normal')
+  doc.setFont('times', 'normal')
   doc.setFontSize(11)
   doc.text(config.team.institution, pageWidth / 2, y, { align: 'center' })
   y += 10
@@ -45,7 +47,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
   doc.line(margin, y, pageWidth - margin, y)
   y += 8
 
-  doc.setFont('helvetica', 'normal')
+  doc.setFont('times', 'normal')
   doc.setFontSize(11)
 
   const attendanceMap = {}
@@ -88,15 +90,16 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
   const infoData = [
     ['Periode', `: ${periodLabel}`],
     ['Range Kegiatan', `: ${activityRange.start} s/d ${activityRange.end}`],
+    ['Tim', `: ${displayTeamName}`],
     ['Ketua Tim', `: ${config.team.leader}`],
     ['Anggota Tim', `: ${config.employees.filter(e => e.role !== 'Ketua Tim').map(e => e.name).join(', ')}`],
-    ['Kehadiran Senin', `: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Izin: ${displayIzin} | Belum Isi: ${displayBelumIsi}`],
+    ['Kehadiran Senin', `: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Izin: ${displayIzin} | Tanpa Keterangan: ${displayBelumIsi}`],
   ]
 
   infoData.forEach(([label, value]) => {
-    doc.setFont('helvetica', 'bold')
+    doc.setFont('times', 'bold')
     doc.text(label, margin, y)
-    doc.setFont('helvetica', 'normal')
+    doc.setFont('times', 'normal')
 
     doc.text(value, margin + 40, y, { maxWidth: contentWidth - 40, lineHeightFactor: 1.5 })
 
@@ -109,7 +112,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
 
   const groupedActivities = groupActivities(activities, 'kegiatan')
   if (groupedActivities.length > 0) {
-    doc.setFont('helvetica', 'bold')
+    doc.setFont('times', 'bold')
     doc.setFontSize(11)
     doc.text('Aktivitas Seminggu Sebelumnya', margin, y)
     y += 4
@@ -126,7 +129,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       body: kegiatanData,
       theme: 'grid',
       styles: {
-        font: 'helvetica',
+        font: 'times',
         fontSize: 9,
         cellPadding: 3,
         textColor: [0, 0, 0],
@@ -158,7 +161,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       y = margin
     }
 
-    doc.setFont('helvetica', 'bold')
+    doc.setFont('times', 'bold')
     doc.setFontSize(11)
     doc.text('Target Minggu Depan', margin, y)
     y += 4
@@ -175,7 +178,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       body: targetData,
       theme: 'grid',
       styles: {
-        font: 'helvetica',
+        font: 'times',
         fontSize: 9,
         cellPadding: 3,
         textColor: [0, 0, 0],
@@ -205,12 +208,12 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
       y = margin
     }
 
-    doc.setFont('helvetica', 'bold')
+    doc.setFont('times', 'bold')
     doc.setFontSize(11)
-    doc.text('Ringkasan Kegiatan Tim', margin, y)
+    doc.text(`Ringkasan Kegiatan ${displayTeamName}`, margin, y)
     y += 6
 
-    doc.setFont('helvetica', 'normal')
+    doc.setFont('times', 'normal')
     doc.setFontSize(10)
 
     doc.text(summary, margin, y, { maxWidth: contentWidth, align: 'left', lineHeightFactor: 1.5 })
@@ -219,7 +222,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     const lineHeight = 10 * 0.352778 * 1.5 // ~5.29 mm for font size 10
     y += (summaryLines.length * lineHeight) + 6
 
-    doc.setFont('helvetica', 'italic')
+    doc.setFont('times', 'italic')
     doc.setFontSize(8)
     doc.setTextColor(100, 100, 100)
     doc.text('* Disclaimer: Ringkasan narasi di atas di-generate secara otomatis menggunakan teknologi AI (Google Gemini) berdasarkan daftar kegiatan yang ada.', margin, y, { maxWidth: contentWidth, lineHeightFactor: 1.3 })
@@ -246,7 +249,9 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
     )
   }
 
-  const filename = `Laporan_Aktivitas_TIM_TI_${periodLabel.replace(/[,\s]+/g, '_')}.pdf`
+  // Filename: DDMMYYYY-Rekap Aktivitas [Team Name].pdf
+  const prefix = periodPrefix || periodLabel.replace(/[,\s]+/g, '_')
+  const filename = `${prefix}-Rekap Aktivitas ${displayTeamName}.pdf`
   doc.save(filename)
 }
 

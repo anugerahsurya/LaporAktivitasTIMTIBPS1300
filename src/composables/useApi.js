@@ -19,7 +19,8 @@ function mergeActivities(periode, currentActs, prevActs) {
         empNama: act.pegawai_nama,
         targets: [],
         originalRows: [],
-        kehadiran: act.kehadiran || ''
+        kehadiran: act.kehadiran || '',
+        tim: act.tim || ''
       }
     }
     currentByEmployee[empId].originalRows.push(act)
@@ -59,7 +60,8 @@ function mergeActivities(periode, currentActs, prevActs) {
         pegawai_id: emp.empId,
         pegawai_nama: emp.empNama,
         created_at: emp.originalRows[i]?.created_at || new Date().toISOString(),
-        kehadiran: emp.kehadiran || ''
+        kehadiran: emp.kehadiran || '',
+        tim: emp.tim || ''
       })
     }
   })
@@ -151,7 +153,8 @@ export function useApi() {
           pegawai_id: activityData.pegawai_id,
           pegawai_nama: activityData.pegawai_nama,
           created_at: new Date().toISOString(),
-          kehadiran: activityData.kehadiran || ''
+          kehadiran: activityData.kehadiran || '',
+          tim: act.tim || ''
         }))
         all.push(...newActivities)
         setLocalData('activities', all)
@@ -166,12 +169,31 @@ export function useApi() {
   }
 
   async function getSuggestions(periode) {
-    const activities = await getActivities(periode)
-    const uniqueActivities = [...new Set(activities.map(a => a.kegiatan).filter(Boolean))]
-    const uniqueTargets = [...new Set(activities.map(a => a.target_minggu_depan).filter(Boolean))]
-    return {
-      kegiatan: uniqueActivities,
-      target: uniqueTargets
+    loading.value = true
+    error.value = null
+    try {
+      if (isConnected) {
+        const res = await fetch(`${config.apiUrl}?action=getSuggestions&periode=${periode}`)
+        const data = await res.json()
+        loading.value = false
+        return {
+          kegiatan: data.kegiatan || data.suggestions || [],
+          target: data.target || data.suggestions || []
+        }
+      } else {
+        const all = getLocalData('activities') || []
+        const uniqueActivities = [...new Set(all.map(a => a.kegiatan).filter(Boolean))]
+        const uniqueTargets = [...new Set(all.map(a => a.target_minggu_depan).filter(Boolean))]
+        loading.value = false
+        return {
+          kegiatan: uniqueActivities,
+          target: uniqueTargets
+        }
+      }
+    } catch (e) {
+      error.value = e.message
+      loading.value = false
+      return { kegiatan: [], target: [] }
     }
   }
 
@@ -320,7 +342,8 @@ Instruksi spesifik:
               id: matched.id,
               name: matched.name,
               role: matched.role,
-              nip: matched.nip
+              nip: matched.nip,
+              team: matched.team
             }
           }
         }

@@ -4,15 +4,15 @@
    ═══════════════════════════════════════════════════════ */
 
 :root {
-  /* Colors — Light Mode defaults */
-  --color-primary: #16a34a;
-  --color-primary-hover: #15803d;
-  --color-primary-light: #dcfce7;
-  --color-primary-lighter: #f0fdf4;
+  /* Colors — Light Mode defaults (Orange #f79039 tone) */
+  --color-primary: #f79039;
+  --color-primary-hover: #e07d2d;
+  --color-primary-light: #fff0e0;
+  --color-primary-lighter: #fffbf5;
   --color-secondary: #ffffff;
-  --color-background: #f8fafb;
+  --color-background: #faf8f6;
   --color-surface: #ffffff;
-  --color-surface-hover: #f0fdf4;
+  --color-surface-hover: #fffbf5;
   --color-text: #1e293b;
   --color-text-secondary: #64748b;
   --color-text-muted: #94a3b8;
@@ -24,16 +24,16 @@
   --color-danger-light: #fef2f2;
   --color-warning: #f59e0b;
   --color-warning-light: #fffbeb;
-  --color-accent: #059669;
+  --color-accent: #e07d2d;
   --color-shadow: rgba(0, 0, 0, 0.08);
   --color-shadow-heavy: rgba(0, 0, 0, 0.15);
   --color-overlay: rgba(0, 0, 0, 0.4);
-  --color-gradient-1: #16a34a;
-  --color-gradient-2: #059669;
-  --color-gradient-3: #047857;
+  --color-gradient-1: #f79039;
+  --color-gradient-2: #e07d2d;
+  --color-gradient-3: #d06a1f;
 
   /* Typography */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.8125rem;
   --font-size-base: 0.9375rem;

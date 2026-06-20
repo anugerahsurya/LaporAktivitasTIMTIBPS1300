@@ -7,7 +7,7 @@
         <line x1="16" y1="13" x2="8" y2="13"/>
         <line x1="16" y1="17" x2="8" y2="17"/>
       </svg>
-      Export Excel
+      Export Excel (Per Tim)
     </button>
 
     <button class="btn btn-primary" @click="openConfirmModal" :disabled="disabled || loadingSummary">
@@ -16,7 +16,7 @@
         <polyline points="14 2 14 8 20 8"/>
       </svg>
       <span v-if="loadingSummary" class="spinner-small"></span>
-      {{ loadingSummary ? 'Generating Summary...' : 'Export PDF' }}
+      {{ loadingSummary ? 'Generating Summary...' : 'Export PDF (Per Tim)' }}
     </button>
 
 
@@ -56,6 +56,7 @@ import { ref } from 'vue'
 import { exportToExcel } from '../utils/exportExcel'
 import { exportToPdf } from '../utils/exportPdf'
 import { useApi } from '../composables/useApi'
+import { config } from '../config'
 
 const props = defineProps({
   activities: { type: Array, default: () => [] },
@@ -68,9 +69,57 @@ const loadingSummary = ref(false)
 const showConfirmModal = ref(false)
 const { generateSummary } = useApi()
 
+const teams = config.teams || []
+
+function getTeamActivities(teamId) {
+  return props.activities.filter(act => act.tim === teamId)
+}
+
+function getTeamName(teamId) {
+  const team = teams.find(t => t.id === teamId)
+  return team ? team.name : 'Tim Lainnya'
+}
+
+/**
+ * Build the DDMMYYYY prefix from periodLabel
+ * periodLabel might be like "Minggu, 22 Juni 2026"
+ * We parse it and format as DDMMYYYY
+ */
+function getPeriodPrefix() {
+  // Try to extract date from periodLabel
+  // Format: "Minggu, 22 Juni 2026" or similar
+  const match = props.periodLabel.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/)
+  if (match) {
+    const day = match[1].padStart(2, '0')
+    const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+    const monthIdx = monthNames.findIndex(m => m.toLowerCase() === match[2].toLowerCase())
+    const month = monthIdx >= 0 ? String(monthIdx + 1).padStart(2, '0') : '00'
+    const year = match[3]
+    return `${day}${month}${year}`
+  }
+  // Fallback: use current date
+  const now = new Date()
+  return `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${now.getFullYear()}`
+}
+
 function handleExportExcel() {
   if (props.activities.length === 0) return
-  exportToExcel(props.activities, props.periodLabel)
+
+  const prefix = getPeriodPrefix()
+
+  teams.forEach(team => {
+    const teamActs = getTeamActivities(team.id)
+    if (teamActs.length > 0) {
+      exportToExcel(teamActs, props.periodLabel, team.name, prefix)
+    }
+  })
+
+  // Also export unassigned if any
+  const teamIds = teams.map(t => t.id)
+  const unassigned = props.activities.filter(act => !act.tim || !teamIds.includes(act.tim))
+  if (unassigned.length > 0) {
+    exportToExcel(unassigned, props.periodLabel, 'Tim Lainnya', prefix)
+  }
 }
 
 function openConfirmModal() {
@@ -85,15 +134,36 @@ function closeConfirmModal() {
 async function confirmExportPdf() {
   closeConfirmModal()
   loadingSummary.value = true
-  let summary = ''
-  try {
-    summary = await generateSummary(props.activities)
-  } catch {
-    summary = ''
-  }
-  loadingSummary.value = false
 
-  await exportToPdf(props.activities, props.periodLabel, props.activityRange, summary)
+  const prefix = getPeriodPrefix()
+
+  for (const team of teams) {
+    const teamActs = getTeamActivities(team.id)
+    if (teamActs.length > 0) {
+      let summary = ''
+      try {
+        summary = await generateSummary(teamActs)
+      } catch {
+        summary = ''
+      }
+      await exportToPdf(teamActs, props.periodLabel, props.activityRange, summary, team.name, prefix)
+    }
+  }
+
+  // Also export unassigned if any
+  const teamIds = teams.map(t => t.id)
+  const unassigned = props.activities.filter(act => !act.tim || !teamIds.includes(act.tim))
+  if (unassigned.length > 0) {
+    let summary = ''
+    try {
+      summary = await generateSummary(unassigned)
+    } catch {
+      summary = ''
+    }
+    await exportToPdf(unassigned, props.periodLabel, props.activityRange, summary, 'Tim Lainnya', prefix)
+  }
+
+  loadingSummary.value = false
 }
 </script>
 

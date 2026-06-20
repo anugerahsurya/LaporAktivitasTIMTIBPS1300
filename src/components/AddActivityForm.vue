@@ -58,6 +58,11 @@
               <span class="user-profile-card__label">Mengisi Laporan Sebagai</span>
               <h3 class="user-profile-card__name">{{ verifiedEmployeeData?.name }}</h3>
               <p class="user-profile-card__role">{{ verifiedEmployeeData?.role }} — NIP: {{ verifiedEmployeeData?.nip || '-' }}</p>
+              <div style="margin-top: 6px;">
+                <span class="user-profile-card__team-badge">
+                  {{ verifiedEmployeeData?.team === '-' ? 'Ketua TIM' : 'Tim Utama: ' + verifiedEmployeeData?.team }}
+                </span>
+              </div>
             </div>
             <button class="btn btn-ghost btn-sm user-profile-card__logout" @click="handleLogout" type="button">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -71,13 +76,15 @@
 
           <!-- Monday Attendance Selection -->
           <div class="form-group mb-8">
-            <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
+            <label class="form-label" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <div class="section-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </div>
               Kehadiran Hari Senin ({{ nextMondayDate }})
             </label>
             <div class="attendance-options">
@@ -100,7 +107,16 @@
           </div>
 
           <div class="section-container">
-            <h3 class="section-title section-title--target">Target Minggu Depan</h3>
+            <h3 class="section-title section-title--target">
+              <div class="section-icon-box section-icon-box--target">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="6"/>
+                  <circle cx="12" cy="12" r="2"/>
+                </svg>
+              </div>
+              Target Minggu Depan
+            </h3>
             <div class="add-form__activities">
               <div
                 v-for="(target, idx) in futureTargets"
@@ -161,6 +177,37 @@
                       <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
                     <span>{{ target.warning }}</span>
+                  </div>
+
+                  <!-- Per-target Team Selector -->
+                  <div class="target-team-selector" style="margin-top: 12px;">
+                    <label class="form-label" style="font-size: 13px; color: var(--color-text-secondary); margin-bottom: 6px; display: block;">Identifikasi Tim untuk kegiatan ini:</label>
+                    <div class="team-toggle">
+                      <template v-if="verifiedEmployeeData?.team === '-'">
+                        <label class="team-toggle-option" :class="{ active: target.tim === 'sis' }">
+                          <input type="radio" v-model="target.tim" value="sis" />
+                          Tim SIS
+                        </label>
+                        <label class="team-toggle-option" :class="{ active: target.tim === 'metods' }">
+                          <input type="radio" v-model="target.tim" value="metods" />
+                          Tim Metodologi
+                        </label>
+                        <label class="team-toggle-option" :class="{ active: target.tim === 'lainnya' }">
+                          <input type="radio" v-model="target.tim" value="lainnya" />
+                          Tim Lainnya
+                        </label>
+                      </template>
+                      <template v-else>
+                        <label class="team-toggle-option" :class="{ active: target.tim === (userTeamId || 'utama') }">
+                          <input type="radio" v-model="target.tim" :value="userTeamId || 'utama'" />
+                          Tim Utama
+                        </label>
+                        <label class="team-toggle-option" :class="{ active: target.tim === 'lainnya' }">
+                          <input type="radio" v-model="target.tim" value="lainnya" />
+                          Tim Lainnya
+                        </label>
+                      </template>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -238,6 +285,17 @@ const emit = defineEmits(['submit', 'cancel'])
 
 const { verifyNip: verifyNipApi, getActivities, deleteActivity } = useApi()
 
+const userTeamId = computed(() => {
+  if (!verifiedEmployeeData.value?.team) return ''
+  const t = config.teams.find(t => t.name === verifiedEmployeeData.value.team)
+  return t ? t.id : ''
+})
+
+const defaultTeamId = computed(() => {
+  if (verifiedEmployeeData.value?.team === '-') return 'sis'
+  return userTeamId.value || 'utama'
+})
+
 const selectedEmployee = ref('')
 const nipInput = ref('')
 const isVerified = ref(false)
@@ -245,13 +303,14 @@ const verifiedEmployeeData = ref(null)
 const loadingExisting = ref(false)
 const existingIds = ref([])
 const attendance = ref('Hadir')
+const teams = config.teams || []
 const submitting = ref(false)
 const showErrors = ref(false)
 const toastVisible = ref(false)
 const toastMessage = ref('')
 let toastTimer = null
 
-const futureTargets = reactive([{ text: '', warning: '', suggestions: [] }])
+const futureTargets = reactive([{ text: '', warning: '', suggestions: [], tim: '' }])
 const showTargetSuggestions = reactive({})
 const debouncers = {}
 
@@ -269,7 +328,6 @@ async function loadExistingActivities() {
       if (myActs[0].kehadiran) {
         attendance.value = myActs[0].kehadiran
       }
-      
       // Load Targets
       futureTargets.length = 0
       myActs.forEach(act => {
@@ -277,16 +335,20 @@ async function loadExistingActivities() {
           futureTargets.push({
             text: act.target_minggu_depan,
             warning: '',
-            suggestions: []
+            suggestions: [],
+            tim: act.tim || defaultTeamId.value
           })
         }
       })
       
       if (futureTargets.length === 0) {
-        futureTargets.push({ text: '', warning: '', suggestions: [] })
+        futureTargets.push({ text: '', warning: '', suggestions: [], tim: defaultTeamId.value })
       }
     } else {
       existingIds.value = []
+      if (futureTargets.length === 1 && !futureTargets[0].text) {
+        futureTargets[0].tim = defaultTeamId.value
+      }
     }
   } catch (e) {
     console.error('Gagal mengambil data kegiatan yang ada:', e)
@@ -354,7 +416,7 @@ function handleLogout() {
   
   attendance.value = 'Hadir'
   futureTargets.length = 0
-  futureTargets.push({ text: '', warning: '', suggestions: [] })
+  futureTargets.push({ text: '', warning: '', suggestions: [], tim: '' })
 }
 
 const isEditMode = computed(() => existingIds.value.length > 0)
@@ -370,7 +432,10 @@ const hasTarget = computed(() => futureTargets.some(t => t.text.trim().length > 
 
 const isValid = computed(() => {
   if (!selectedEmployee.value) return false
-  return hasTarget.value
+  const validTargets = futureTargets.filter(t => t.text.trim().length > 0)
+  if (validTargets.length === 0) return false
+  if (validTargets.some(t => !t.tim)) return false
+  return true
 })
 
 function showToast(message) {
@@ -381,7 +446,7 @@ function showToast(message) {
 }
 
 function addFutureTarget() { 
-  futureTargets.push({ text: '', warning: '', suggestions: [] }) 
+  futureTargets.push({ text: '', warning: '', suggestions: [], tim: defaultTeamId.value }) 
 }
 
 function removeFutureTarget(idx) { 
@@ -424,7 +489,11 @@ function onTargetBlur(idx) {
 
 function filteredTargetSuggestions(idx) {
   const query = futureTargets[idx].text.toLowerCase().trim()
-  const list = props.suggestions.target || []
+  
+  const targetList = props.suggestions.target || []
+  const kegiatanList = props.suggestions.kegiatan || []
+  const list = Array.from(new Set([...targetList, ...kegiatanList]))
+  
   if (!query) return list
   return list.filter(s => s.toLowerCase().includes(query))
 }
@@ -459,10 +528,11 @@ async function handleSubmit() {
       }
     }
 
-    const validTargets = futureTargets.map(t => sanitizeInput(t.text)).filter(Boolean)
-    const finalActivities = validTargets.map(target => ({
+    const validTargets = futureTargets.filter(t => t.text.trim().length > 0)
+    const finalActivities = validTargets.map(t => ({
       kegiatan: '',
-      target: target
+      target: sanitizeInput(t.text),
+      tim: t.tim || defaultTeamId.value
     }))
 
     const data = {
@@ -537,6 +607,19 @@ async function handleSubmit() {
   padding-top: 2px;
 }
 
+.user-profile-card__team-badge {
+  display: inline-block;
+  background: var(--color-primary-light, rgba(247, 144, 57, 0.15));
+  color: var(--color-primary, #f79039);
+  border: 1px solid var(--color-primary, #f79039);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs, 11px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* Attendance Selector */
 .attendance-options {
   display: flex;
@@ -605,6 +688,94 @@ async function handleSubmit() {
   box-shadow: 0 0 6px var(--color-warning);
 }
 
+/* Team Selector Dropdown */
+.select-wrapper {
+  position: relative;
+}
+
+.custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: var(--space-10);
+  cursor: pointer;
+  background-color: var(--color-surface);
+}
+
+.custom-select.placeholder-active {
+  color: var(--color-text-muted);
+}
+
+.select-arrow {
+  position: absolute;
+  top: 50%;
+  right: var(--space-4);
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-select:focus + .select-arrow {
+  color: var(--color-primary);
+}
+
+/* Team Toggle Switch */
+.team-toggle {
+  display: flex;
+  background: var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+}
+
+.team-toggle-option {
+  flex: 1;
+  text-align: center;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border-radius: calc(var(--radius-md) - 2px);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.team-toggle-option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.team-toggle-option.active {
+  background: linear-gradient(135deg, var(--color-gradient-1), var(--color-gradient-2));
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(247, 144, 57, 0.3);
+}
+
+/* Boxed Icons for Sections */
+.section-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--color-gradient-1), var(--color-gradient-2));
+  color: white;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(247, 144, 57, 0.3);
+}
+
+.section-icon-box--target {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
 /* Grammar Warning */
 .grammar-warning {
   display: flex;
@@ -640,20 +811,11 @@ async function handleSubmit() {
   color: var(--color-text);
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
-.section-title::before {
-  content: '';
-  display: block;
-  width: 4px;
-  height: 20px;
-  background: var(--color-primary);
-  border-radius: 2px;
-}
-
-.section-title--target::before {
-  background: var(--color-warning);
+.section-title--target {
+  /* target title specific adjustments if any */
 }
 
 .add-form__activities {
@@ -860,7 +1022,7 @@ async function handleSubmit() {
   font-size: var(--font-size-lg);
   font-weight: 700;
   border-radius: var(--radius-full);
-  box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2);
+  box-shadow: 0 4px 10px rgba(247, 144, 57, 0.2);
 }
 
 .user-profile-card__info {
@@ -952,7 +1114,7 @@ async function handleSubmit() {
 }
 
 .loading-existing .spinner-small {
-  border-color: rgba(22, 163, 74, 0.2);
+  border-color: rgba(247, 144, 57, 0.2);
   border-top-color: var(--color-primary);
   width: 24px;
   height: 24px;

@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx'
 import { config } from '../config'
 
-export function exportToExcel(activities, periodLabel) {
+export function exportToExcel(activities, periodLabel, teamName = '', periodPrefix = '') {
   const groupedActivities = groupActivities(activities, 'kegiatan')
   const groupedTargets = groupActivities(activities, 'target_minggu_depan')
 
@@ -54,17 +54,19 @@ export function exportToExcel(activities, periodLabel) {
   const displayIzin = countIzin > 0 ? countIzin : '-'
   const displayBelumIsi = countBelumIsi > 0 ? countBelumIsi : '-'
 
+  const displayTeamName = teamName || config.team.name
+
   const wb = XLSX.utils.book_new()
   const wsRows = []
 
-  wsRows.push([`REKAP AKTIVITAS MINGGUAN ${config.team.name.toUpperCase()}`])
+  wsRows.push([`REKAP AKTIVITAS MINGGUAN ${displayTeamName.toUpperCase()}`])
   wsRows.push([`${config.team.institution}`])
   wsRows.push([`Periode: ${periodLabel}`])
-  wsRows.push([`Kehadiran Senin Depan: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Izin: ${displayIzin} | Belum Isi: ${displayBelumIsi}`])
+  wsRows.push([`Kehadiran Senin Depan: Hadir: ${displayHadir} | Cuti: ${displayCuti} | Izin: ${displayIzin} | Tanpa Keterangan: ${displayBelumIsi}`])
   wsRows.push([])
 
   if (kegiatanRows.length > 0) {
-    wsRows.push(['AKTIVITAS SEMINGGU SEBELUMNYA'])
+    wsRows.push(['Kegiatan Minggu Lalu'])
     wsRows.push(['No', 'Kegiatan', 'Nama Pegawai'])
     kegiatanRows.forEach(row => {
       wsRows.push([row.No, row.Uraian, row['Nama Pegawai']])
@@ -73,7 +75,7 @@ export function exportToExcel(activities, periodLabel) {
   }
 
   if (targetRows.length > 0) {
-    wsRows.push(['TARGET MINGGU DEPAN'])
+    wsRows.push(['Rencana Kegiatan Minggu Ini'])
     wsRows.push(['No', 'Target', 'Nama Pegawai'])
     targetRows.forEach(row => {
       wsRows.push([row.No, row.Uraian, row['Nama Pegawai']])
@@ -113,7 +115,7 @@ export function exportToExcel(activities, periodLabel) {
         ws[cell].s.alignment.horizontal = 'center'
         ws[cell].s.border = getBorder()
       }
-      else if (ws[cell].v === 'AKTIVITAS SEMINGGU SEBELUMNYA' || ws[cell].v === 'TARGET MINGGU DEPAN') {
+      else if (ws[cell].v === 'Kegiatan Minggu Lalu' || ws[cell].v === 'Rencana Kegiatan Minggu Ini') {
         ws[cell].s.font.bold = true
         ws[cell].s.font.color = { rgb: '16A34A' }
       }
@@ -134,7 +136,9 @@ export function exportToExcel(activities, periodLabel) {
 
   XLSX.utils.book_append_sheet(wb, ws, 'Aktivitas')
 
-  const filename = `Laporan_Aktivitas_TIM_TI_${periodLabel.replace(/[,\s]+/g, '_')}.xlsx`
+  // Filename: DDMMYYYY-Rekap Aktivitas [Team Name].xlsx
+  const prefix = periodPrefix || periodLabel.replace(/[,\s]+/g, '_')
+  const filename = `${prefix}-Rekap Aktivitas ${displayTeamName}.xlsx`
   XLSX.writeFile(wb, filename)
 }
 

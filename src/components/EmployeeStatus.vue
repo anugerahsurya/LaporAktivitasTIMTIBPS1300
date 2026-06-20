@@ -18,12 +18,12 @@
           </span>
           <span class="legend-item">
             <span class="legend-dot legend-dot--unmarked"></span>
-            Belum Isi
+            Tanpa Keterangan
           </span>
         </div>
       </div>
       <div v-if="unfilledCount > 0" class="badge badge-warning">
-        {{ unfilledCount }} Pegawai Belum Mengisi
+        {{ unfilledCount }} Pegawai Tanpa Keterangan
       </div>
       <div v-else class="badge badge-success">
         Semua Pegawai Sudah Mengisi
@@ -40,7 +40,7 @@
           'employee-chip--permission': emp.kehadiran === 'Izin',
           'employee-chip--unmarked': emp.kehadiran === ''
         }"
-        :title="emp.kehadiran === 'Hadir' ? `${emp.name} (Hadir)` : (emp.kehadiran === 'Cuti' ? `${emp.name} (Cuti)` : (emp.kehadiran === 'Izin' ? `${emp.name} (Izin)` : `${emp.name} (Belum mengisi)`))"
+        :title="emp.kehadiran === 'Hadir' ? `${emp.name} (Hadir)` : (emp.kehadiran === 'Cuti' ? `${emp.name} (Cuti)` : (emp.kehadiran === 'Izin' ? `${emp.name} (Izin)` : `${emp.name} (Tanpa Keterangan)`))"
       >
         <span class="employee-chip__indicator"></span>
         <span class="employee-chip__name">{{ emp.name }}</span>

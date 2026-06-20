@@ -5,7 +5,7 @@
       <div class="hero__content animate-fade-in-up">
         <h2 class="hero__title">
           <span class="gradient-text">Rekap Aktivitas</span>
-          <br />Seminggu Kedepan Tim TI
+          <br />Seminggu Kedepan
         </h2>
         <p class="hero__subtitle">
           Pantau dan catat target aktivitas tim secara terstruktur setiap minggunya.
@@ -57,12 +57,34 @@
     </div>
 
 
-    <ActivityTable v-else :activities="activities" />
+    <template v-else>
+      <div
+        v-for="team in teams"
+        :key="team.id"
+        class="team-table-section animate-fade-in-up"
+      >
+        <ActivityTable
+          :activities="getTeamActivities(team.id)"
+          :team-name="team.name"
+        />
+      </div>
+
+      <!-- Activities without a team (backward compatibility) -->
+      <div
+        v-if="unassignedActivities.length > 0"
+        class="team-table-section animate-fade-in-up"
+      >
+        <ActivityTable
+          :activities="unassignedActivities"
+          team-name="Tim Lainnya"
+        />
+      </div>
+    </template>
 
 
     <div v-if="activities.length > 0" class="export-section animate-fade-in">
       <h3 class="export-section__title">Export Laporan</h3>
-      <p class="export-section__desc">Download rekap kegiatan dalam format Excel atau PDF.</p>
+      <p class="export-section__desc">Download rekap kegiatan per tim dalam format Excel atau PDF.</p>
       <ExportButtons
         :activities="activities"
         :period-label="periodLabel"
@@ -82,11 +104,12 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePeriod } from '../composables/usePeriod'
 import { useApi } from '../composables/useApi'
 import { parseISO } from '../utils/dateUtils'
+import { config } from '../config'
 import PeriodSelector from '../components/PeriodSelector.vue'
 import EmployeeStatus from '../components/EmployeeStatus.vue'
 import ActivityTable from '../components/ActivityTable.vue'
@@ -109,6 +132,17 @@ const { getActivities, loading } = useApi()
 
 const activities = ref([])
 const toast = ref({ show: false, message: '', type: 'success' })
+
+const teams = config.teams || []
+
+function getTeamActivities(teamId) {
+  return activities.value.filter(act => act.tim === teamId)
+}
+
+const unassignedActivities = computed(() => {
+  const teamIds = teams.map(t => t.id)
+  return activities.value.filter(act => !act.tim || !teamIds.includes(act.tim))
+})
 
 async function loadActivities() {
   activities.value = await getActivities(periodISO.value)
@@ -196,6 +230,10 @@ function showToast(message, type = 'success') {
 .loading-container p {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+}
+
+.team-table-section {
+  margin-top: var(--space-2);
 }
 
 .export-section {

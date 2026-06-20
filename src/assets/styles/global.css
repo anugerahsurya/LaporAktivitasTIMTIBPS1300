@@ -153,10 +153,10 @@ img {
 .btn-primary {
   background: linear-gradient(135deg, var(--color-gradient-1), var(--color-gradient-2));
   color: white;
-  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+  box-shadow: 0 2px 8px rgba(247, 144, 57, 0.3);
 }
 .btn-primary:hover {
-  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.4);
+  box-shadow: 0 4px 16px rgba(247, 144, 57, 0.4);
   transform: translateY(-1px);
 }
 
@@ -377,7 +377,7 @@ table tbody tr:last-child td {
   animation: slideInRight var(--transition-spring);
 }
 .toast-success {
-  border-left: 4px solid var(--color-success);
+  border-left: 4px solid var(--color-primary);
 }
 .toast-error {
   border-left: 4px solid var(--color-danger);
