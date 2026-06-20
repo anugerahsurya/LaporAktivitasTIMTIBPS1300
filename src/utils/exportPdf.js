@@ -114,7 +114,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
   if (groupedActivities.length > 0) {
     doc.setFont('times', 'bold')
     doc.setFontSize(11)
-    doc.text('Aktivitas Seminggu Sebelumnya', margin, y)
+    doc.text('Kegiatan Minggu Lalu', margin, y)
     y += 4
 
     const kegiatanData = groupedActivities.map((item, idx) => [
@@ -164,7 +164,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
 
     doc.setFont('times', 'bold')
     doc.setFontSize(11)
-    doc.text('Target Minggu Depan', margin, y)
+    doc.text('Rencana Kegiatan Minggu Ini', margin, y)
     y += 4
 
     const targetData = groupedTargets.map((item, idx) => [

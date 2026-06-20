@@ -27,7 +27,7 @@
     <div v-else class="activity-sections">
 
       <div v-if="groupedTargets.length > 0" class="table-section">
-        <h3 class="section-title section-title--target">Target Minggu Depan</h3>
+        <h3 class="section-title section-title--target">Rencana Kegiatan Minggu Ini</h3>
         <div class="table-wrapper">
           <table>
             <thead>

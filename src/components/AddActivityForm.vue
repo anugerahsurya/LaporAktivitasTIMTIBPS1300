@@ -3,7 +3,7 @@
     <div class="add-form__card card">
       <div class="add-form__header">
         <h2>{{ isEditMode ? 'Edit Laporan' : 'Tambah Laporan' }}</h2>
-        <p>{{ isEditMode ? 'Perbarui target aktivitas Anda untuk minggu depan.' : 'Isikan target aktivitas untuk minggu depan.' }}</p>
+        <p>{{ isEditMode ? 'Perbarui rencana kegiatan Anda untuk minggu ini.' : 'Isikan rencana kegiatan untuk minggu ini.' }}</p>
       </div>
 
       <!-- Himbauan Pengisian -->
@@ -115,7 +115,7 @@
                   <circle cx="12" cy="12" r="2"/>
                 </svg>
               </div>
-              Target Minggu Depan
+              Rencana Kegiatan Minggu Ini
             </h3>
             <div class="add-form__activities">
               <div
@@ -146,7 +146,7 @@
                       @input="onTargetInput(idx)"
                       @focus="showTargetSuggestions[idx] = true"
                       @blur="onTargetBlur(idx)"
-                      placeholder="Ketik target untuk minggu depan..."
+                      placeholder="Ketik rencana kegiatan untuk minggu ini..."
                       autocomplete="off"
                       maxlength="500"
                     />
@@ -226,7 +226,7 @@
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              Minimal 1 target minggu depan harus diisi.
+              Minimal 1 rencana kegiatan minggu ini harus diisi.
             </p>
           </div>
 
@@ -513,7 +513,7 @@ async function handleSubmit() {
   }
 
   if (!hasTarget.value) {
-    showToast('Minimal 1 target minggu depan harus diisi.')
+    showToast('Minimal 1 rencana kegiatan minggu ini harus diisi.')
     return
   }
 
