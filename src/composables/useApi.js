@@ -266,12 +266,12 @@ export function useApi() {
 
       const prompt = `Buatkan ringkasan narasi eksekutif (tepat 2 paragraf padat) untuk laporan aktivitas mingguan Tim Teknologi Informasi BPS Provinsi Sumatera Barat. 
 
-Daftar kegiatan yang diselesaikan minggu ini: ${activityList}.
-${uniqueTargets ? `Rencana/target kegiatan minggu depan: ${uniqueTargets}.` : ''}
+Daftar kegiatan yang diselesaikan minggu ini: ${activityList ? activityList : 'Kosong'}.
+Rencana/target kegiatan minggu depan: ${uniqueTargets ? uniqueTargets : 'Kosong'}.
 
 Instruksi spesifik:
-1. Paragraf pertama: Bahas intisari kegiatan yang telah diselesaikan minggu ini secara profesional.
-2. Paragraf kedua: ${uniqueTargets ? 'Bahas rencana dan target kegiatan tim untuk minggu depan berdasarkan data di atas.' : 'Bahas harapan dan rencana umum untuk minggu depan berdasarkan konteks kegiatan minggu ini.'}
+1. Paragraf pertama: Bahas intisari kegiatan yang telah diselesaikan minggu ini secara profesional. Jika daftar kegiatan Kosong, maka isi paragraf pertama HANYA dengan teks "Data belum tersedia." tanpa tambahan kalimat apa pun.
+2. Paragraf kedua: Bahas rencana dan target kegiatan tim untuk minggu depan berdasarkan data di atas. JANGAN melakukan improvisasi di luar konteks, HANYA jabarkan sesuai poin target yang tersedia. Jika rencana/target minggu depan Kosong, maka isi paragraf kedua HANYA dengan teks "Data belum tersedia." tanpa tambahan kalimat apa pun.
 3. JANGAN menyebutkan nama anggota tim atau kontributor sama sekali.
 4. Fokus pada pencapaian dan pekerjaan tim secara kolektif.
 5. JANGAN membuat/menebak kepanjangan dari singkatan apa pun yang ada di daftar kegiatan (misal: SBR, SAKERNAS, dll), biarkan singkatan tersebut apa adanya.`
