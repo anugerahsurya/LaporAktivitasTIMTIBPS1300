@@ -207,7 +207,7 @@ export async function exportToPdf(activities, periodLabel, activityRange, summar
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(11)
-    doc.text('Ringkasan Kegiatan Tim (Berdasarkan AI)', margin, y)
+    doc.text('Ringkasan Kegiatan Tim', margin, y)
     y += 6
 
     doc.setFont('helvetica', 'normal')
