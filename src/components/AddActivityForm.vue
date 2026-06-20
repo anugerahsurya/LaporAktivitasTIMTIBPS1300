@@ -60,7 +60,7 @@
               <p class="user-profile-card__role">{{ verifiedEmployeeData?.role }} — NIP: {{ verifiedEmployeeData?.nip || '-' }}</p>
               <div style="margin-top: 6px;">
                 <span class="user-profile-card__team-badge">
-                  {{ verifiedEmployeeData?.team === '-' ? 'Ketua TIM' : 'Tim Utama: ' + verifiedEmployeeData?.team }}
+                  {{ verifiedEmployeeData?.team === '-' ? 'Ketua TIM' : verifiedEmployeeData?.team }}
                 </span>
               </div>
             </div>
@@ -1009,6 +1009,7 @@ async function handleSubmit() {
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-8);
   transition: all var(--transition-fast);
+  flex-wrap: wrap;
 }
 
 .user-profile-card__avatar {
@@ -1070,6 +1071,12 @@ async function handleSubmit() {
   color: var(--color-danger);
   background: var(--color-danger-light);
   border-color: var(--color-danger);
+}
+
+@media (max-width: 640px) {
+  .user-profile-card__logout {
+    margin-left: auto;
+  }
 }
 
 .input-with-action {
