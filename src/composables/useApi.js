@@ -250,7 +250,7 @@ Instruksi spesifik:
         return data
       } else {
         const { employees } = await import('../data/employees')
-        const matched = employees.find(e => String(e.nip) === String(nip))
+        const matched = employees.find(e => String(e.id) === String(nip) || (e.nip && String(e.nip) === String(nip)))
         loading.value = false
         if (matched) {
           return {
@@ -259,7 +259,7 @@ Instruksi spesifik:
               id: matched.id,
               name: matched.name,
               role: matched.role,
-              nip: matched.nip,
+              nip: matched.nip || String(matched.id),
               team: matched.team
             }
           }

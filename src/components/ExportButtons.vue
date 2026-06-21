@@ -150,7 +150,8 @@ const totalSteps = ref(0)
 const progressPercent = ref(0)
 const nipInputRef = ref(null)
 
-const { generateSummary } = useApi()
+const { generateSummary, verifyNip } = useApi()
+const verifiedEmployee = ref(null)
 
 const teams = config.teams || []
 
@@ -159,19 +160,15 @@ const teams = config.teams || []
  * Aan Subrata has team: '-' meaning he is Ketua for ALL teams.
  */
 const teamsToExport = computed(() => {
-  // For the verified Ketua Tim, find which teams they belong to
-  const ketuaEmployee = config.employees.find(
-    e => e.role === 'Ketua Tim' && e.nip === nipInput.value.trim()
-  )
-  if (!ketuaEmployee) return []
+  if (!verifiedEmployee.value) return []
 
   // If team is 'Tim IT', the leader is Ketua for both SIS and Metods
-  if (ketuaEmployee.team === 'Tim IT') {
+  if (verifiedEmployee.value.team === 'Tim IT') {
     return teams.filter(t => t.id === 'sis' || t.id === 'metods')
   }
 
   // Otherwise, find the specific team
-  const teamObj = teams.find(t => t.name === ketuaEmployee.team)
+  const teamObj = teams.find(t => t.name === verifiedEmployee.value.team)
   return teamObj ? [teamObj] : []
 })
 
@@ -240,6 +237,7 @@ function openNipModal() {
   nipError.value = ''
   nipVerified.value = false
   verifiedName.value = ''
+  verifiedEmployee.value = null
   randomName.value = 'nip_field_' + Math.random().toString(36).substring(7)
   showNipModal.value = true
   nextTick(() => {
@@ -253,6 +251,7 @@ function closeNipModal() {
   nipError.value = ''
   nipVerified.value = false
   verifiedName.value = ''
+  verifiedEmployee.value = null
 }
 
 // ── NIP Verification ──
@@ -263,27 +262,24 @@ async function verifyNipInput() {
   nipError.value = ''
   verifyingNip.value = true
 
-  await delay(400) // Small UX delay for feedback
-
-  // Check if NIP belongs to a Ketua Tim
-  const ketuaEmployee = config.employees.find(
-    e => String(e.nip) === nip && e.role === 'Ketua Tim'
-  )
-
-  if (ketuaEmployee) {
-    nipVerified.value = true
-    verifiedName.value = ketuaEmployee.name
-  } else {
-    // Check if NIP exists but is not Ketua Tim
-    const anyEmployee = config.employees.find(e => String(e.nip) === nip)
-    if (anyEmployee) {
-      nipError.value = `NIP terdaftar atas nama ${anyEmployee.name}, tetapi bukan Ketua Tim.`
+  try {
+    const res = await verifyNip(nip)
+    if (res.success) {
+      if (res.employee.role === 'Ketua Tim') {
+        nipVerified.value = true
+        verifiedName.value = res.employee.name
+        verifiedEmployee.value = res.employee
+      } else {
+        nipError.value = `NIP terdaftar atas nama ${res.employee.name}, tetapi bukan Ketua Tim.`
+      }
     } else {
-      nipError.value = 'NIP tidak terdaftar. Pastikan NIP yang dimasukkan benar.'
+      nipError.value = res.error || 'NIP tidak terdaftar. Pastikan NIP yang dimasukkan benar.'
     }
+  } catch (e) {
+    nipError.value = 'Gagal memverifikasi NIP.'
+  } finally {
+    verifyingNip.value = false
   }
-
-  verifyingNip.value = false
 }
 
 // ── ZIP Download ──
