@@ -73,9 +73,10 @@
 
     <div v-if="activities.length > 0" class="export-section animate-fade-in">
       <h3 class="export-section__title">Export Laporan</h3>
-      <p class="export-section__desc">Download rekap kegiatan per tim dalam format Excel atau PDF.</p>
+      <p class="export-section__desc">Unduh rekap kegiatan dalam satu file ZIP berisi Excel dan PDF per tim.</p>
       <ExportButtons
         :activities="activities"
+        :prev-activities="prevActivities"
         :period-label="periodLabel"
         :activity-range="activityRange"
         :disabled="activities.length === 0"
@@ -97,7 +98,13 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePeriod } from '../composables/usePeriod'
 import { useApi } from '../composables/useApi'
-import { parseISO } from '../utils/dateUtils'
+import { parseISO, formatDateISO } from '../utils/dateUtils'
+
+function getPrevPeriodISO(periodeISO) {
+  const d = parseISO(periodeISO)
+  d.setDate(d.getDate() - 7)
+  return formatDateISO(d)
+}
 import { config } from '../config'
 import PeriodSelector from '../components/PeriodSelector.vue'
 import EmployeeStatus from '../components/EmployeeStatus.vue'
@@ -120,6 +127,7 @@ const {
 const { getActivities, loading } = useApi()
 
 const activities = ref([])
+const prevActivities = ref([])
 const toast = ref({ show: false, message: '', type: 'success' })
 
 const teams = config.teams || []
@@ -130,6 +138,28 @@ function getTeamActivities(teamId) {
     if (act.tim === 'lainnya') {
       const empConfig = config.employees.find(e => String(e.id) === String(act.pegawai_id))
       if (empConfig) {
+        if (empConfig.team === 'Tim IT') {
+          return teamId === 'sis'
+        }
+        const teamObj = config.teams.find(t => t.name === empConfig.team)
+        if (teamObj && teamObj.id === teamId) {
+          return true
+        }
+      }
+    }
+    return false
+  })
+}
+
+function getTeamPrevActivities(teamId) {
+  return prevActivities.value.filter(act => {
+    if (act.tim === teamId) return true
+    if (act.tim === 'lainnya') {
+      const empConfig = config.employees.find(e => String(e.id) === String(act.pegawai_id))
+      if (empConfig) {
+        if (empConfig.team === 'Tim IT') {
+          return teamId === 'sis'
+        }
         const teamObj = config.teams.find(t => t.name === empConfig.team)
         if (teamObj && teamObj.id === teamId) {
           return true
@@ -141,7 +171,12 @@ function getTeamActivities(teamId) {
 }
 
 async function loadActivities() {
-  activities.value = await getActivities(periodISO.value)
+  const [curr, prev] = await Promise.all([
+    getActivities(periodISO.value),
+    getActivities(getPrevPeriodISO(periodISO.value))
+  ])
+  activities.value = curr
+  prevActivities.value = prev
 }
 
 

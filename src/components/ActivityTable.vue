@@ -21,12 +21,12 @@
         <line x1="9" y1="15" x2="15" y2="15"/>
       </svg>
       <h3>Belum Ada Laporan</h3>
-      <p>Belum ada kegiatan atau target yang tercatat untuk periode ini. Klik tombol "Isi Kegiatan" untuk menambahkan.</p>
+      <p>Belum ada target rencana kegiatan yang tercatat untuk periode ini.</p>
     </div>
 
     <div v-else class="activity-sections">
 
-      <div v-if="groupedTargets.length > 0" class="table-section">
+      <div class="table-section">
         <h3 class="section-title section-title--target">Rencana Kegiatan Minggu Ini</h3>
         <div class="table-wrapper">
           <table>
@@ -60,6 +60,11 @@
                   </div>
                 </td>
               </tr>
+              <tr v-if="groupedTargets.length === 0">
+                <td colspan="3" class="empty-state-row">
+                  <div class="empty-state-cell">Belum ada rencana kegiatan minggu ini yang dilaporkan.</div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -74,27 +79,6 @@ import { computed } from 'vue'
 const props = defineProps({
   activities: { type: Array, default: () => [] },
   teamName: { type: String, default: '' },
-})
-
-const groupedActivities = computed(() => {
-  const map = new Map()
-  props.activities.forEach(act => {
-    if (!act.kegiatan) return
-
-    const key = act.kegiatan
-    if (map.has(key)) {
-      const existing = map.get(key)
-      if (!existing.contributors.includes(act.pegawai_nama)) {
-        existing.contributors.push(act.pegawai_nama)
-      }
-    } else {
-      map.set(key, {
-        text: act.kegiatan,
-        contributors: [act.pegawai_nama],
-      })
-    }
-  })
-  return Array.from(map.values())
 })
 
 const groupedTargets = computed(() => {
