@@ -115,8 +115,8 @@ const groupedTargets = computed(() => {
   padding: var(--space-4) var(--space-5);
   background: linear-gradient(135deg, var(--color-primary-lighter), var(--color-primary-light));
   border: 1px solid var(--color-primary-light);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  margin-bottom: 0;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-5);
 }
 
 .team-header__icon {
@@ -224,5 +224,23 @@ table {
 
 .empty-state svg {
   opacity: 0.4;
+}
+
+@media (max-width: 768px) {
+  .team-header {
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-4);
+    border-radius: var(--radius-md);
+    gap: var(--space-2);
+  }
+
+  .team-header__icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .team-header__name {
+    font-size: var(--font-size-sm);
+  }
 }
 </style>
