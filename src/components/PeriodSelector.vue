@@ -22,6 +22,9 @@
       <div v-if="canFill" class="period-selector__status badge badge-success">
         ✓ Pengisian Dibuka
       </div>
+      <div v-else-if="isFuturePeriod" class="period-selector__status badge badge-warning">
+        ○ Belum Dibuka
+      </div>
       <div v-else class="period-selector__status badge badge-warning">
         ○ Pengisian Ditutup
       </div>
@@ -49,6 +52,7 @@ defineProps({
   activityRange: Object,
   canFill: Boolean,
   isCurrentPeriod: Boolean,
+  isFuturePeriod: Boolean,
 })
 
 defineEmits(['prev', 'next', 'today'])

@@ -103,72 +103,33 @@ describe('getComingSunday', () => {
 })
 
 describe('getCurrentPeriod — Anchor ke Minggu akhir minggu kegiatan', () => {
-  // ═══════════════════════════════════════════════════════
-  //  KASUS UTAMA: Senin sebagai batas pergantian periode
-  // ═══════════════════════════════════════════════════════
-
-  it('Senin 15 Juni jam 11:00 → masih periode Minggu 14 Juni (periode lama)', () => {
+  it('Senin 15 Juni jam 11:00 → masih periode Minggu 14 Juni', () => {
     const senin_pagi = makeDate(2026, 6, 15, 11, 0)
     const result = getCurrentPeriod(senin_pagi)
     expect(formatDateISO(result)).toBe('2026-06-14')
   })
 
-  it('Senin 15 Juni jam 11:59 → masih periode Minggu 14 Juni (belum jam 12)', () => {
-    const senin_1159 = makeDate(2026, 6, 15, 11, 59)
-    const result = getCurrentPeriod(senin_1159)
-    expect(formatDateISO(result)).toBe('2026-06-14')
-  })
-
-  it('Senin 15 Juni jam 12:00 → periode baru: Minggu 21 Juni', () => {
-    const senin_siang = makeDate(2026, 6, 15, 12, 0)
-    const result = getCurrentPeriod(senin_siang)
-    expect(formatDateISO(result)).toBe('2026-06-21')
-  })
-
-  it('Senin 15 Juni jam 13:00 → periode baru: Minggu 21 Juni', () => {
-    const senin_sore = makeDate(2026, 6, 15, 13, 0)
-    const result = getCurrentPeriod(senin_sore)
-    expect(formatDateISO(result)).toBe('2026-06-21')
-  })
-
-  it('Senin 15 Juni jam 23:59 → periode baru: Minggu 21 Juni', () => {
+  it('Senin 15 Juni jam 23:59 → masih periode Minggu 14 Juni', () => {
     const senin_malam = makeDate(2026, 6, 15, 23, 59)
     const result = getCurrentPeriod(senin_malam)
-    expect(formatDateISO(result)).toBe('2026-06-21')
-  })
-
-  it('Senin 15 Juni jam 00:00 → masih periode lama: Minggu 14 Juni', () => {
-    const senin_dinihari = makeDate(2026, 6, 15, 0, 0)
-    const result = getCurrentPeriod(senin_dinihari)
     expect(formatDateISO(result)).toBe('2026-06-14')
   })
 
-  // ═══════════════════════════════════════════════════════
-  //  KASUS: Hari lain dalam minggu (Selasa-Minggu)
-  //  Semua harus menunjuk ke Minggu 21 Juni (akhir minggu)
-  // ═══════════════════════════════════════════════════════
-
-  it('Selasa 16 Juni jam 08:00 → periode Minggu 21 Juni', () => {
-    const selasa = makeDate(2026, 6, 16, 8, 0)
-    const result = getCurrentPeriod(selasa)
-    expect(formatDateISO(result)).toBe('2026-06-21')
-  })
-
-  it('Rabu 17 Juni jam 14:00 → periode Minggu 21 Juni', () => {
+  it('Rabu 17 Juni jam 14:00 → masih periode Minggu 14 Juni', () => {
     const rabu = makeDate(2026, 6, 17, 14, 0)
     const result = getCurrentPeriod(rabu)
-    expect(formatDateISO(result)).toBe('2026-06-21')
+    expect(formatDateISO(result)).toBe('2026-06-14')
   })
 
-  it('Kamis 18 Juni jam 09:00 → periode Minggu 21 Juni', () => {
-    const kamis = makeDate(2026, 6, 18, 9, 0)
-    const result = getCurrentPeriod(kamis)
-    expect(formatDateISO(result)).toBe('2026-06-21')
+  it('Jumat 19 Juni jam 23:59 → masih periode Minggu 14 Juni', () => {
+    const jumat_malam = makeDate(2026, 6, 19, 23, 59)
+    const result = getCurrentPeriod(jumat_malam)
+    expect(formatDateISO(result)).toBe('2026-06-14')
   })
 
-  it('Jumat 19 Juni jam 16:00 → periode Minggu 21 Juni', () => {
-    const jumat = makeDate(2026, 6, 19, 16, 0)
-    const result = getCurrentPeriod(jumat)
+  it('Sabtu 20 Juni jam 00:00 → periode baru: Minggu 21 Juni', () => {
+    const sabtu_pagi = makeDate(2026, 6, 20, 0, 0)
+    const result = getCurrentPeriod(sabtu_pagi)
     expect(formatDateISO(result)).toBe('2026-06-21')
   })
 
@@ -184,122 +145,109 @@ describe('getCurrentPeriod — Anchor ke Minggu akhir minggu kegiatan', () => {
     expect(formatDateISO(result)).toBe('2026-06-21')
   })
 
-  // ═══════════════════════════════════════════════════════
-  //  KASUS: Minggu berikutnya (22-28 Juni)
-  // ═══════════════════════════════════════════════════════
-
-  it('Senin 22 Juni jam 11:00 → masih periode Minggu 21 Juni', () => {
+  it('Senin 22 Juni jam 11:00 → periode Minggu 21 Juni', () => {
     const senin_pagi = makeDate(2026, 6, 22, 11, 0)
     const result = getCurrentPeriod(senin_pagi)
     expect(formatDateISO(result)).toBe('2026-06-21')
   })
 
-  it('Senin 22 Juni jam 12:00 → periode baru: Minggu 28 Juni', () => {
-    const senin_siang = makeDate(2026, 6, 22, 12, 0)
-    const result = getCurrentPeriod(senin_siang)
-    expect(formatDateISO(result)).toBe('2026-06-28')
-  })
-
-  it('Selasa 23 Juni jam 09:00 → periode Minggu 28 Juni', () => {
+  it('Selasa 23 Juni jam 09:00 → periode Minggu 21 Juni', () => {
     const selasa = makeDate(2026, 6, 23, 9, 0)
     const result = getCurrentPeriod(selasa)
+    expect(formatDateISO(result)).toBe('2026-06-21')
+  })
+
+  it('Jumat 26 Juni jam 23:59 → masih periode Minggu 21 Juni', () => {
+    const jumat_malam = makeDate(2026, 6, 26, 23, 59)
+    const result = getCurrentPeriod(jumat_malam)
+    expect(formatDateISO(result)).toBe('2026-06-21')
+  })
+
+  it('Sabtu 27 Juni jam 00:00 → periode baru: Minggu 28 Juni', () => {
+    const sabtu_pagi = makeDate(2026, 6, 27, 0, 0)
+    const result = getCurrentPeriod(sabtu_pagi)
     expect(formatDateISO(result)).toBe('2026-06-28')
   })
 })
 
 describe('getFillingRange', () => {
-  it('periode 21 Juni → Senin 15 jam 12:00 sampai Senin 22 jam 11:59', () => {
+  it('periode 21 Juni → Sabtu 20 Juni 00:00 sampai Jumat 26 Juni 23:59', () => {
     const period = makeDate(2026, 6, 21) // Minggu 21 Juni
     const { start, end } = getFillingRange(period)
 
-    // Start: Senin 15 Juni jam 12:00
-    expect(start.getDate()).toBe(15)
-    expect(start.getDay()).toBe(1) // Senin
-    expect(start.getHours()).toBe(12)
+    // Start: Sabtu 20 Juni jam 00:00
+    expect(start.getDate()).toBe(20)
+    expect(start.getDay()).toBe(6) // Sabtu
+    expect(start.getHours()).toBe(0)
     expect(start.getMinutes()).toBe(0)
 
-    // End: Senin 22 Juni jam 11:59
-    expect(end.getDate()).toBe(22)
-    expect(end.getDay()).toBe(1) // Senin
-    expect(end.getHours()).toBe(11)
+    // End: Jumat 26 Juni jam 23:59
+    expect(end.getDate()).toBe(26)
+    expect(end.getDay()).toBe(5) // Jumat
+    expect(end.getHours()).toBe(23)
     expect(end.getMinutes()).toBe(59)
   })
 
-  it('periode 14 Juni → Senin 8 jam 12:00 sampai Senin 15 jam 11:59', () => {
+  it('periode 14 Juni → Sabtu 13 Juni 00:00 sampai Jumat 19 Juni 23:59', () => {
     const period = makeDate(2026, 6, 14) // Minggu 14 Juni
     const { start, end } = getFillingRange(period)
 
-    expect(start.getDate()).toBe(8)
-    expect(start.getDay()).toBe(1) // Senin
-    expect(start.getHours()).toBe(12)
+    expect(start.getDate()).toBe(13)
+    expect(start.getDay()).toBe(6) // Sabtu
+    expect(start.getHours()).toBe(0)
 
-    expect(end.getDate()).toBe(15)
-    expect(end.getDay()).toBe(1) // Senin
-    expect(end.getHours()).toBe(11)
+    expect(end.getDate()).toBe(19)
+    expect(end.getDay()).toBe(5) // Jumat
+    expect(end.getHours()).toBe(23)
     expect(end.getMinutes()).toBe(59)
   })
 
-  it('start selalu hari Senin (periode - 6 hari)', () => {
+  it('start selalu hari Sabtu (periode - 1 hari)', () => {
     const period = makeDate(2026, 6, 28) // Minggu 28 Juni
     const { start } = getFillingRange(period)
-    expect(start.getDay()).toBe(1) // Senin
-    expect(start.getDate()).toBe(22)
+    expect(start.getDay()).toBe(6) // Sabtu
+    expect(start.getDate()).toBe(27)
   })
 
-  it('end selalu hari Senin (periode + 1 hari)', () => {
+  it('end selalu hari Jumat (periode + 5 hari)', () => {
     const period = makeDate(2026, 6, 28) // Minggu 28 Juni
     const { end } = getFillingRange(period)
-    expect(end.getDay()).toBe(1) // Senin
-    expect(end.getDate()).toBe(29)
+    expect(end.getDay()).toBe(5) // Jumat
+    expect(end.getDate()).toBe(3) // 3 Juli
   })
 })
 
 describe('isFillingOpen — Pengecekan dengan jam', () => {
   const period = makeDate(2026, 6, 21) // Minggu 21 Juni
-  // Filling: Senin 15 Juni 12:00 → Senin 22 Juni 11:59
+  // Filling: Sabtu 20 Juni 00:00 → Jumat 26 Juni 23:59
 
-  it('Minggu 14 Juni jam 23:59 → BELUM BUKA (sebelum periode)', () => {
-    const now = makeDate(2026, 6, 14, 23, 59)
+  it('Jumat 19 Juni jam 23:59 → BELUM BUKA (sebelum periode)', () => {
+    const now = makeDate(2026, 6, 19, 23, 59)
     expect(isFillingOpen(period, now)).toBe(false)
   })
 
-  it('Senin 15 Juni jam 11:59 → BELUM BUKA (sebelum jam 12)', () => {
-    const now = makeDate(2026, 6, 15, 11, 59)
+  it('Sabtu 20 Juni jam 00:00 → SUDAH BUKA', () => {
+    const now = makeDate(2026, 6, 20, 0, 0)
+    expect(isFillingOpen(period, now)).toBe(true)
+  })
+
+  it('Rabu 24 Juni jam 14:00 → BUKA', () => {
+    const now = makeDate(2026, 6, 24, 14, 0)
+    expect(isFillingOpen(period, now)).toBe(true)
+  })
+
+  it('Jumat 26 Juni jam 23:59 → MASIH BUKA (batas akhir)', () => {
+    const now = makeDate(2026, 6, 26, 23, 59)
+    expect(isFillingOpen(period, now)).toBe(true)
+  })
+
+  it('Sabtu 27 Juni jam 00:00 → SUDAH TUTUP', () => {
+    const now = makeDate(2026, 6, 27, 0, 0)
     expect(isFillingOpen(period, now)).toBe(false)
   })
 
-  it('Senin 15 Juni jam 12:00 → SUDAH BUKA', () => {
-    const now = makeDate(2026, 6, 15, 12, 0)
-    expect(isFillingOpen(period, now)).toBe(true)
-  })
-
-  it('Selasa 16 Juni jam 08:00 → BUKA', () => {
-    const now = makeDate(2026, 6, 16, 8, 0)
-    expect(isFillingOpen(period, now)).toBe(true)
-  })
-
-  it('Rabu 17 Juni jam 14:00 → BUKA', () => {
-    const now = makeDate(2026, 6, 17, 14, 0)
-    expect(isFillingOpen(period, now)).toBe(true)
-  })
-
-  it('Minggu 21 Juni jam 23:59 → BUKA', () => {
-    const now = makeDate(2026, 6, 21, 23, 59)
-    expect(isFillingOpen(period, now)).toBe(true)
-  })
-
-  it('Senin 22 Juni jam 11:59 → MASIH BUKA (batas akhir)', () => {
-    const now = makeDate(2026, 6, 22, 11, 59)
-    expect(isFillingOpen(period, now)).toBe(true)
-  })
-
-  it('Senin 22 Juni jam 12:00 → SUDAH TUTUP', () => {
-    const now = makeDate(2026, 6, 22, 12, 0)
-    expect(isFillingOpen(period, now)).toBe(false)
-  })
-
-  it('Senin 22 Juni jam 13:00 → TUTUP', () => {
-    const now = makeDate(2026, 6, 22, 13, 0)
+  it('Sabtu 27 Juni jam 01:00 → TUTUP', () => {
+    const now = makeDate(2026, 6, 27, 1, 0)
     expect(isFillingOpen(period, now)).toBe(false)
   })
 })
@@ -307,12 +255,11 @@ describe('isFillingOpen — Pengecekan dengan jam', () => {
 describe('getCurrentPeriod cocok dengan isFillingOpen', () => {
   it('periode yang dideteksi harus filling-open pada waktu itu', () => {
     const testCases = [
-      makeDate(2026, 6, 15, 12, 0),   // Senin siang → periode 21 Juni
-      makeDate(2026, 6, 16, 8, 0),    // Selasa pagi → periode 21 Juni
-      makeDate(2026, 6, 18, 14, 30),  // Kamis siang → periode 21 Juni
-      makeDate(2026, 6, 20, 22, 0),   // Sabtu malam → periode 21 Juni
+      makeDate(2026, 6, 20, 0, 0),    // Sabtu dini hari → periode 21 Juni
       makeDate(2026, 6, 21, 10, 0),   // Minggu pagi → periode 21 Juni
-      makeDate(2026, 6, 22, 11, 0),   // Senin pagi → masih periode 21 Juni
+      makeDate(2026, 6, 22, 14, 30),  // Senin siang → periode 21 Juni
+      makeDate(2026, 6, 24, 22, 0),   // Rabu malam → periode 21 Juni
+      makeDate(2026, 6, 26, 23, 59),  // Jumat malam → periode 21 Juni
     ]
 
     for (const now of testCases) {
@@ -322,16 +269,15 @@ describe('getCurrentPeriod cocok dengan isFillingOpen', () => {
     }
   })
 
-  it('Senin sebelum jam 12 → periode sebelumnya harus filling-open', () => {
-    const now = makeDate(2026, 6, 15, 11, 0)
+  it('Jumat sebelum jam 23:59 → periode sebelumnya harus filling-open', () => {
+    const now = makeDate(2026, 6, 19, 23, 0)
     const period = getCurrentPeriod(now)
-    // Periode = Minggu 14 Juni, filling: Senin 8 jam 12 → Senin 15 jam 11:59
     expect(formatDateISO(period)).toBe('2026-06-14')
     expect(isFillingOpen(period, now)).toBe(true)
   })
 
-  it('Senin jam 12 → periode baru harus filling-open', () => {
-    const now = makeDate(2026, 6, 22, 12, 0)
+  it('Sabtu jam 00:00 → periode baru harus filling-open', () => {
+    const now = makeDate(2026, 6, 27, 0, 0)
     const period = getCurrentPeriod(now)
     expect(formatDateISO(period)).toBe('2026-06-28')
     expect(isFillingOpen(period, now)).toBe(true)
@@ -339,24 +285,24 @@ describe('getCurrentPeriod cocok dengan isFillingOpen', () => {
 })
 
 describe('getActivityRange', () => {
-  it('periode 21 Juni → kegiatan Senin 15 s/d Minggu 21 Juni', () => {
+  it('periode 21 Juni → kegiatan Senin 22 s/d Minggu 28 Juni', () => {
     const period = makeDate(2026, 6, 21) // Minggu 21 Juni
+    const { start, end } = getActivityRange(period)
+
+    expect(start.getDay()).toBe(1) // Senin
+    expect(start.getDate()).toBe(22)
+    expect(end.getDay()).toBe(0) // Minggu
+    expect(end.getDate()).toBe(28)
+  })
+
+  it('periode 14 Juni → kegiatan Senin 15 s/d Minggu 21 Juni', () => {
+    const period = makeDate(2026, 6, 14)
     const { start, end } = getActivityRange(period)
 
     expect(start.getDay()).toBe(1) // Senin
     expect(start.getDate()).toBe(15)
     expect(end.getDay()).toBe(0) // Minggu
     expect(end.getDate()).toBe(21)
-  })
-
-  it('periode 14 Juni → kegiatan Senin 8 s/d Minggu 14 Juni', () => {
-    const period = makeDate(2026, 6, 14)
-    const { start, end } = getActivityRange(period)
-
-    expect(start.getDay()).toBe(1) // Senin
-    expect(start.getDate()).toBe(8)
-    expect(end.getDay()).toBe(0) // Minggu
-    expect(end.getDate()).toBe(14)
   })
 })
 
@@ -422,23 +368,23 @@ describe('getRecentPeriods', () => {
   })
 })
 
-describe('Kasus khusus: Hari ini (16 Juni 2026 jam 21:36 WIB)', () => {
-  it('16 Juni 2026 (Selasa) jam 21:36 → periode Minggu 21 Juni', () => {
-    const now = makeDate(2026, 6, 16, 21, 36)
+describe('Kasus khusus: Hari ini (21 Juni 2026 jam 21:36 WIB)', () => {
+  it('21 Juni 2026 (Minggu) jam 21:36 → periode Minggu 21 Juni', () => {
+    const now = makeDate(2026, 6, 21, 21, 36)
     const result = getCurrentPeriod(now)
     expect(formatDateISO(result)).toBe('2026-06-21')
   })
 
-  it('isFillingOpen untuk periode 21 Juni pada 16 Juni jam 21:36 → BUKA', () => {
+  it('isFillingOpen untuk periode 21 Juni pada 21 Juni jam 21:36 → BUKA', () => {
     const period = makeDate(2026, 6, 21)
-    const now = makeDate(2026, 6, 16, 21, 36)
+    const now = makeDate(2026, 6, 21, 21, 36)
     expect(isFillingOpen(period, now)).toBe(true)
   })
 
-  it('activityRange untuk periode 21 Juni → 15 Juni s/d 21 Juni', () => {
+  it('activityRange untuk periode 21 Juni → 22 Juni s/d 28 Juni', () => {
     const period = makeDate(2026, 6, 21)
     const { start, end } = getActivityRange(period)
-    expect(formatDate(start)).toBe('15 Juni 2026')
-    expect(formatDate(end)).toBe('21 Juni 2026')
+    expect(formatDate(start)).toBe('22 Juni 2026')
+    expect(formatDate(end)).toBe('28 Juni 2026')
   })
 })

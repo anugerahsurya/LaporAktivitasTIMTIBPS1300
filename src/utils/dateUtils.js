@@ -24,36 +24,29 @@ export function getComingSunday(from = new Date()) {
 
 export function getCurrentPeriod(from = new Date()) {
   const d = new Date(from)
+  d.setHours(0, 0, 0, 0)
   const day = d.getDay()
-  const hour = d.getHours()
 
-  if (day === 1 && hour < 12) {
-    const yesterday = new Date(d)
-    yesterday.setDate(yesterday.getDate() - 1)
-    return getLastSunday(yesterday)
+  if (day === 6) { // Sabtu
+    const nextSunday = new Date(d)
+    nextSunday.setDate(nextSunday.getDate() + 1)
+    return nextSunday
   }
 
-  if (day === 1 && hour >= 12) {
-    return getComingSunday(d)
-  }
-
-  if (day === 0) {
-    const result = new Date(d)
-    result.setHours(0, 0, 0, 0)
-    return result
-  }
-
-  return getComingSunday(d)
+  // Minggu (0) s/d Jumat (5)
+  const lastSunday = new Date(d)
+  lastSunday.setDate(lastSunday.getDate() - day)
+  return lastSunday
 }
 
 export function getFillingRange(periodDate) {
   const start = new Date(periodDate)
-  start.setDate(start.getDate() - 6)
-  start.setHours(12, 0, 0, 0)
+  start.setDate(start.getDate() - 1)
+  start.setHours(0, 0, 0, 0)
 
   const end = new Date(periodDate)
-  end.setDate(end.getDate() + 1)
-  end.setHours(11, 59, 59, 999)
+  end.setDate(end.getDate() + 5)
+  end.setHours(23, 59, 59, 999)
 
   return { start, end }
 }
@@ -97,9 +90,10 @@ export function getPeriodLabel(date) {
 }
 
 export function getActivityRange(periodDate) {
-  const end = new Date(periodDate)
   const start = new Date(periodDate)
-  start.setDate(start.getDate() - 6)
+  start.setDate(start.getDate() + 1)
+  const end = new Date(periodDate)
+  end.setDate(end.getDate() + 7)
   return { start, end }
 }
 

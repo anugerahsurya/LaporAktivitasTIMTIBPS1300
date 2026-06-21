@@ -39,6 +39,10 @@ export function usePeriod() {
     formatDateISO(selectedPeriod.value) === formatDateISO(currentPeriod.value)
   )
 
+  const isFuturePeriod = computed(() =>
+    selectedPeriod.value.getTime() > currentPeriod.value.getTime()
+  )
+
   function goToPeriod(date) {
     selectedPeriod.value = new Date(date)
   }
@@ -68,6 +72,7 @@ export function usePeriod() {
     activityRange,
     canFill,
     isCurrentPeriod,
+    isFuturePeriod,
     goToPeriod,
     goToPrevPeriod,
     goToNextPeriod,

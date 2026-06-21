@@ -34,8 +34,8 @@
           <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
         <div>
-          <h4>Pengisian Belum/Sudah Ditutup</h4>
-          <p>Pengisian untuk periode ini hanya dibuka pada {{ fillingRange.start }} — {{ fillingRange.end }}.</p>
+          <h4>{{ isFuturePeriod ? 'Pengisian Belum Dibuka' : 'Pengisian Sudah Ditutup' }}</h4>
+          <p>Pengisian untuk periode ini {{ isFuturePeriod ? 'belum dibuka' : 'sudah ditutup' }}. Periode pengisian hanya dibuka pada {{ fillingRange.start }} — {{ fillingRange.end }}.</p>
         </div>
       </div>
 
@@ -61,7 +61,7 @@ import { useApi } from '../composables/useApi'
 import AddActivityForm from '../components/AddActivityForm.vue'
 
 const router = useRouter()
-const { periodLabel, periodISO, fillingRange, canFill } = usePeriod()
+const { periodLabel, periodISO, fillingRange, canFill, isFuturePeriod } = usePeriod()
 const { addActivity, getSuggestions } = useApi()
 
 const suggestions = ref({ kegiatan: [], target: [] })
