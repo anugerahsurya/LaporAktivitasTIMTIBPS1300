@@ -37,6 +37,44 @@
       </nav>
 
       <div class="app-header__right">
+        <div class="preset-dropdown-container">
+          <button class="preset-dropdown-btn" @click="isPresetOpen = !isPresetOpen" @blur="closePresetDropdownDelayed">
+            <span class="preset-color-indicator" :style="{ backgroundColor: currentPresetColor }"></span>
+            <span>{{ currentPresetName }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: isPresetOpen ? 'rotate(180deg)' : 'rotate(0)' }" style="transition: transform 0.2s;">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          
+          <Transition name="dropdown">
+            <div v-if="isPresetOpen" class="preset-dropdown-menu">
+              <button 
+                class="preset-dropdown-item" 
+                :class="{ active: activePreset === 'ekonomi' }" 
+                @click="selectPreset('ekonomi')"
+              >
+                <span class="preset-color-indicator" style="background-color: #f79039"></span>
+                Sensus Ekonomi
+              </button>
+              <button 
+                class="preset-dropdown-item" 
+                :class="{ active: activePreset === 'pertanian' }" 
+                @click="selectPreset('pertanian')"
+              >
+                <span class="preset-color-indicator" style="background-color: #16a34a"></span>
+                Sensus Pertanian
+              </button>
+              <button 
+                class="preset-dropdown-item" 
+                :class="{ active: activePreset === 'penduduk' }" 
+                @click="selectPreset('penduduk')"
+              >
+                <span class="preset-color-indicator" style="background-color: #0ea5e9"></span>
+                Sensus Penduduk
+              </button>
+            </div>
+          </Transition>
+        </div>
         <ThemeToggle />
       </div>
     </div>
@@ -44,10 +82,40 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { config } from '../config'
 import ThemeToggle from './ThemeToggle.vue'
+import { useTheme } from '../composables/useTheme'
 
 const teamName = `${config.team.name} — ${config.team.institution}`
+const { activePreset, setPreset } = useTheme()
+
+const isPresetOpen = ref(false)
+
+const currentPresetColor = computed(() => {
+  if (activePreset.value === 'ekonomi') return '#f79039'
+  if (activePreset.value === 'pertanian') return '#16a34a'
+  if (activePreset.value === 'penduduk') return '#0ea5e9'
+  return '#f79039'
+})
+
+const currentPresetName = computed(() => {
+  if (activePreset.value === 'ekonomi') return 'Sensus Ekonomi'
+  if (activePreset.value === 'pertanian') return 'Sensus Pertanian'
+  if (activePreset.value === 'penduduk') return 'Sensus Penduduk'
+  return 'Pilih Preset'
+})
+
+function selectPreset(preset) {
+  setPreset(preset)
+  isPresetOpen.value = false
+}
+
+function closePresetDropdownDelayed() {
+  setTimeout(() => {
+    isPresetOpen.value = false
+  }, 200)
+}
 </script>
 
 <style scoped>
@@ -136,6 +204,89 @@ const teamName = `${config.team.name} — ${config.team.institution}`
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+.preset-dropdown-container {
+  position: relative;
+}
+
+.preset-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preset-dropdown-btn:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+
+.preset-color-indicator {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.preset-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1);
+  z-index: 1000;
+}
+
+.preset-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.preset-dropdown-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.preset-dropdown-item.active {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: opacity 0.2s, transform 0.2s;
+}
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 @media (max-width: 768px) {

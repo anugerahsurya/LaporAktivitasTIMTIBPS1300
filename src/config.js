@@ -58,6 +58,86 @@ export const config = {
       gradient2: '#f79039',
       gradient3: '#e07d2d',
     },
+    presets: {
+      ekonomi: {
+        light: {
+          primary: '#f79039',
+          primaryHover: '#e07d2d',
+          primaryLight: '#fff0e0',
+          primaryLighter: '#fffbf5',
+          gradient1: '#f79039',
+          gradient2: '#e07d2d',
+          gradient3: '#d06a1f',
+          background: '#faf8f6',
+          surfaceHover: '#fffbf5',
+        },
+        dark: {
+          primary: '#ea580c', // Orange-600 (gelap sedikit agar teks putih jelas)
+          primaryHover: '#f97316',
+          primaryLight: '#431407',
+          primaryLighter: '#2a0a02',
+          gradient1: '#f97316',
+          gradient2: '#ea580c',
+          gradient3: '#c2410c',
+          background: '#0b1120',
+          surface: '#141c2e',
+          surfaceHover: '#1f2a3e',
+        },
+        pdfHeaderColor: 'f79039',
+      },
+      pertanian: {
+        light: {
+          primary: '#059669', // Emerald-600
+          primaryHover: '#047857',
+          primaryLight: '#d1fae5',
+          primaryLighter: '#ecfdf5',
+          gradient1: '#10b981',
+          gradient2: '#059669',
+          gradient3: '#047857',
+          background: '#f6fbf9', // Background kehijauan
+          surfaceHover: '#ecfdf5',
+        },
+        dark: {
+          primary: '#059669', // Emerald-600 (gelap agar teks putih jelas)
+          primaryHover: '#10b981',
+          primaryLight: '#064e3b',
+          primaryLighter: '#022c22',
+          gradient1: '#10b981',
+          gradient2: '#059669',
+          gradient3: '#047857',
+          background: '#060f0b', // Background dark kehijauan
+          surface: '#0d1b14',
+          surfaceHover: '#13281e',
+        },
+        pdfHeaderColor: '059669',
+      },
+      penduduk: {
+        light: {
+          primary: '#2563eb', // Blue-600
+          primaryHover: '#1d4ed8',
+          primaryLight: '#dbeafe',
+          primaryLighter: '#eff6ff',
+          gradient1: '#3b82f6',
+          gradient2: '#2563eb',
+          gradient3: '#1d4ed8',
+          background: '#f5f7fa', // Background kebiruan
+          surfaceHover: '#eff6ff',
+        },
+        dark: {
+          primary: '#2563eb', // Blue-600 (gelap agar teks putih jelas)
+          primaryHover: '#3b82f6',
+          primaryLight: '#1e3a8a',
+          primaryLighter: '#172554',
+          gradient1: '#3b82f6',
+          gradient2: '#2563eb',
+          gradient3: '#1d4ed8',
+          background: '#0b1121', // Background dark kebiruan
+          surface: '#121c33',
+          surfaceHover: '#1a2849',
+        },
+        pdfHeaderColor: '2563eb',
+      }
+    }
   },
 
   teams: [

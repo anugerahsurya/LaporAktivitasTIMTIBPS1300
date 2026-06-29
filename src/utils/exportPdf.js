@@ -25,7 +25,7 @@ const loadLogo = (url) => {
   });
 };
 
-async function generatePdfDoc(activities, periodLabel, activityRange, summary, teamName, teamId, allActivities, prevActivities) {
+async function generatePdfDoc(activities, periodLabel, activityRange, summary, teamName, teamId, allActivities, prevActivities, signatureParams) {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -319,18 +319,55 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
     doc.setFontSize(10)
     doc.setTextColor(40, 40, 40)
 
-    const summaryLines = doc.splitTextToSize(summary, contentWidth)
+    const paragraphs = summary.split('\n')
     const lineHeight = 10 * 0.352778 * 1.5
 
-    summaryLines.forEach(line => {
-      if (y > pageHeight - 20) {
-        doc.addPage()
-        y = margin + 10
+    paragraphs.forEach(para => {
+      if (!para.trim()) {
+        y += lineHeight * 0.5
+        return
       }
-      doc.text(line, margin, y)
-      y += lineHeight
+
+      const pLines = doc.splitTextToSize(para, contentWidth)
+
+      pLines.forEach((line, index) => {
+        if (y > pageHeight - 20) {
+          doc.addPage()
+          y = margin + 10
+        }
+        
+        if (index === pLines.length - 1) {
+          // Last line: normal left align
+          doc.text(line, margin, y)
+        } else {
+          // Justify line manually
+          const words = line.split(' ').filter(w => w.length > 0)
+          if (words.length <= 1) {
+            doc.text(line, margin, y)
+          } else {
+            // total width of words without spaces
+            let wordsWidth = 0
+            words.forEach(w => wordsWidth += doc.getTextWidth(w))
+            
+            // space needed between words
+            const spaceWidth = (contentWidth - wordsWidth) / (words.length - 1)
+            
+            let currentX = margin
+            words.forEach((word, wIdx) => {
+              doc.text(word, currentX, y)
+              if (wIdx < words.length - 1) {
+                currentX += doc.getTextWidth(word) + spaceWidth
+              }
+            })
+          }
+        }
+        y += lineHeight
+      })
+      
+      y += lineHeight * 0.5 // jarak antar paragraf
     })
-    y += 6
+    
+    y += 6 - (lineHeight * 0.5)
 
     doc.setFont('times', 'italic')
     doc.setFontSize(8)
@@ -351,18 +388,66 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
     doc.setTextColor(0, 0, 0)
   }
 
+  // Signature Block
+  if (signatureParams && signatureParams.image) {
+    if (y > pageHeight - 65) {
+      doc.addPage()
+      y = margin + 10
+    } else {
+      y += 15
+    }
+
+    const sigWidth = 80 // width for signature area
+    const sigX = pageWidth - margin - sigWidth
+    
+    doc.setFont('times', 'normal')
+    doc.setFontSize(11)
+    
+    const roleLines = doc.splitTextToSize(signatureParams.role, sigWidth)
+    
+    let targetW = 64
+    let targetH = 32
+    
+    try {
+      const imgProps = doc.getImageProperties(signatureParams.image)
+      const imgRatio = imgProps.width / imgProps.height
+      targetH = targetW / imgRatio
+    } catch (e) {
+      console.error('Failed to get signature image properties', e)
+    }
+    
+    let sigY = y
+    doc.setTextColor(0, 0, 0)
+    roleLines.forEach(line => {
+      doc.text(line, sigX + (sigWidth / 2), sigY, { align: 'center' })
+      sigY += 5
+    })
+    
+    sigY += 5 // minimal gap before image
+    
+    try {
+      doc.addImage(signatureParams.image, 'PNG', sigX + (sigWidth / 2) - (targetW / 2), sigY, targetW, targetH)
+    } catch (e) {
+      // Ignore
+    }
+    
+    sigY += targetH + 5 // minimal gap before name
+    doc.setFont('times', 'bold')
+    doc.text(signatureParams.name, sigX + (sigWidth / 2), sigY, { align: 'center' })
+  }
+
   return { doc, displayTeamName }
 }
 
-export async function exportToPdf(activities, periodLabel, activityRange, summary = '', teamName = '', periodPrefix = '', teamId = '', allActivities = null, prevActivities = []) {
-  const { doc, displayTeamName } = await generatePdfDoc(activities, periodLabel, activityRange, summary, teamName, teamId, allActivities, prevActivities)
+export async function exportToPdf(activities, periodLabel, activityRange, summary = '', teamName = '', periodPrefix = '', teamId = '', allActivities = null, prevActivities = [], signatureParams = null) {
+  const { doc, displayTeamName } = await generatePdfDoc(activities, periodLabel, activityRange, summary, teamName, teamId, allActivities, prevActivities, signatureParams)
   const prefix = periodPrefix || periodLabel.replace(/[,\s]+/g, '_')
   const filename = `${prefix}-Rekap Aktivitas ${displayTeamName}.pdf`
   doc.save(filename)
 }
 
-export async function exportToPdfBlob(activities, periodLabel, activityRange, summary = '', teamName = '', periodPrefix = '', teamId = '', allActivities = null, prevActivities = []) {
-  const { doc, displayTeamName } = await generatePdfDoc(activities, periodLabel, activityRange, summary, teamName, teamId, allActivities, prevActivities)
+export async function exportToPdfBlob(activities, periodLabel, activityRange, summary = '', teamName = '', periodPrefix = '', teamId = '', allActivities = null, prevActivities = [], signatureParams = null) {
+  const { doc, displayTeamName } = await generatePdfDoc(activities, periodLabel, activityRange, summary, teamName, teamId, allActivities, prevActivities, signatureParams)
   const prefix = periodPrefix || periodLabel.replace(/[,\s]+/g, '_')
   const filename = `${prefix}-Rekap Aktivitas ${displayTeamName}.pdf`
   const arrayBuffer = doc.output('arraybuffer')

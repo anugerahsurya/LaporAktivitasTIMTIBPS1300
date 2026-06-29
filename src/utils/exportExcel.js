@@ -12,7 +12,7 @@ export function exportToExcel(activities, periodLabel, teamName = '', periodPref
         'Nama Pegawai': item.contributors.join(', '),
         'Keterangan Tim': item.tim === 'lainnya' ? 'Tim Lainnya' : 'Tim Utama'
       }))
-    : [{ 'No': '-', 'Uraian': 'Belum ada kegiatan minggu lalu yang dilaporkan.', 'Nama Pegawai': '-', 'Keterangan Tim': '-' }]
+    : [{ 'No': '-', 'Uraian': 'Belum ada kegiatan yang dilaporkan.', 'Nama Pegawai': '-', 'Keterangan Tim': '-' }]
 
   const targetRows = groupedTargets.length > 0
     ? groupedTargets.map((item, idx) => ({

@@ -2,11 +2,17 @@ import { ref, watch, onMounted } from 'vue'
 import { config } from '../config'
 
 const isDark = ref(false)
+const activePreset = ref('ekonomi')
 
 export function useTheme() {
-  function applyTheme(dark) {
+  function applyTheme(dark, presetId = 'ekonomi') {
     const root = document.documentElement
-    const theme = dark ? config.colors.dark : config.colors.light
+    const baseTheme = dark ? config.colors.dark : config.colors.light
+    const presetBase = config.colors.presets[presetId] || config.colors.presets['ekonomi']
+    const preset = dark ? presetBase.dark : presetBase.light
+    
+    // Merge base theme with preset overrides
+    const theme = { ...baseTheme, ...preset }
 
     root.setAttribute('data-theme', dark ? 'dark' : 'light')
 
@@ -41,7 +47,16 @@ export function useTheme() {
   function toggleTheme() {
     isDark.value = !isDark.value
     localStorage.setItem('theme-dark', isDark.value)
-    applyTheme(isDark.value)
+    applyTheme(isDark.value, activePreset.value)
+  }
+  
+  function setPreset(presetId) {
+    if (config.colors.presets[presetId]) {
+      activePreset.value = presetId
+      localStorage.setItem('theme-preset', presetId)
+      config.export.headerColor = config.colors.presets[presetId].pdfHeaderColor
+      applyTheme(isDark.value, activePreset.value)
+    }
   }
 
   function initTheme() {
@@ -51,7 +66,14 @@ export function useTheme() {
     } else {
       isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
     }
-    applyTheme(isDark.value)
+    
+    const storedPreset = localStorage.getItem('theme-preset')
+    if (storedPreset && config.colors.presets[storedPreset]) {
+      activePreset.value = storedPreset
+      config.export.headerColor = config.colors.presets[storedPreset].pdfHeaderColor
+    }
+    
+    applyTheme(isDark.value, activePreset.value)
   }
 
   onMounted(() => {
@@ -59,12 +81,14 @@ export function useTheme() {
   })
 
   watch(isDark, (val) => {
-    applyTheme(val)
+    applyTheme(val, activePreset.value)
   })
 
   return {
     isDark,
+    activePreset,
     toggleTheme,
+    setPreset,
     initTheme,
   }
 }
