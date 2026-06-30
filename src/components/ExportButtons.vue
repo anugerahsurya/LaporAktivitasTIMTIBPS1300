@@ -77,7 +77,7 @@
                 <table class="compact-table">
                   <thead>
                     <tr>
-                      <th style="width: 40px; text-align: center;">#</th>
+                      <th style="width: 60px; text-align: center;">Status</th>
                       <th style="width: 150px;">Nama Pegawai</th>
                       <th>Kegiatan</th>
                     </tr>
@@ -85,7 +85,10 @@
                   <tbody>
                     <tr v-for="act in team.prevActivities" :key="act._ui_id" @click="selectedActivities[act._ui_id] = !selectedActivities[act._ui_id]">
                       <td style="text-align: center;">
-                        <input type="checkbox" v-model="selectedActivities[act._ui_id]" @click.stop />
+                        <label class="toggle-switch" @click.stop>
+                          <input type="checkbox" v-model="selectedActivities[act._ui_id]" />
+                          <span class="slider round"></span>
+                        </label>
                       </td>
                       <td><span class="act-person">{{ act.contributors.join(', ') }}</span></td>
                       <td><span class="act-name">{{ act.text }}</span></td>
@@ -101,7 +104,7 @@
                 <table class="compact-table">
                   <thead>
                     <tr>
-                      <th style="width: 40px; text-align: center;">#</th>
+                      <th style="width: 60px; text-align: center;">Status</th>
                       <th style="width: 150px;">Nama Pegawai</th>
                       <th>Rencana / Target</th>
                     </tr>
@@ -109,7 +112,10 @@
                   <tbody>
                     <tr v-for="act in team.activities" :key="act._ui_id" @click="selectedActivities[act._ui_id] = !selectedActivities[act._ui_id]">
                       <td style="text-align: center;">
-                        <input type="checkbox" v-model="selectedActivities[act._ui_id]" @click.stop />
+                        <label class="toggle-switch" @click.stop>
+                          <input type="checkbox" v-model="selectedActivities[act._ui_id]" />
+                          <span class="slider round"></span>
+                        </label>
                       </td>
                       <td><span class="act-person">{{ act.contributors.join(', ') }}</span></td>
                       <td><span class="act-name">{{ act.text }}</span></td>
@@ -160,6 +166,30 @@
                   <div class="form-group">
                     <label class="nip-label">Tanda Tangan</label>
                     <SignaturePad v-model="signatureData" />
+                  </div>
+                  
+                  <div class="signature-preview" v-if="signatureName || signatureRole || signatureData">
+                    <div class="preview-header">
+                      <label class="nip-label">Preview Tanda Tangan</label>
+                      <div class="signature-controls" v-if="signatureData">
+                        <div class="control-item">
+                          <label>Ukuran: {{ Math.round(signatureScale * 100) }}%</label>
+                          <input type="range" v-model.number="signatureScale" min="0.5" max="2" step="0.1" />
+                        </div>
+                        <div class="control-item">
+                          <label>Geser (Kiri/Kanan):</label>
+                          <input type="range" v-model.number="signatureOffsetX" min="-50" max="50" step="1" />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="preview-box">
+                      <div class="preview-role">{{ signatureRole }}</div>
+                      <div class="preview-image" v-if="signatureData">
+                        <img :src="signatureData" alt="Tanda Tangan" :style="{ transform: `scale(${signatureScale}) translateX(${signatureOffsetX}px)` }" />
+                      </div>
+                      <div class="preview-image-placeholder" v-else></div>
+                      <div class="preview-name">{{ signatureName }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -271,6 +301,8 @@ const isGeneratingSummary = ref(false)
 const signatureName = ref('')
 const signatureRole = ref('')
 const signatureData = ref('')
+const signatureScale = ref(1)
+const signatureOffsetX = ref(0)
 
 const teams = config.teams || []
 
@@ -502,7 +534,9 @@ async function startDownloadZip() {
   const signatureParams = {
     image: signatureData.value,
     name: signatureName.value,
-    role: signatureRole.value
+    role: signatureRole.value,
+    scale: signatureScale.value,
+    offsetX: signatureOffsetX.value
   }
 
   const teamPromises = teamsWithData.value.map(async (team) => {
@@ -803,6 +837,59 @@ async function startDownloadZip() {
   color: var(--color-text);
   background: var(--color-surface);
 }
+
+/* ── Toggle Switch ── */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  margin: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .3s;
+}
+
+.toggle-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .3s;
+}
+
+.toggle-switch input:checked + .slider {
+  background-color: #10b981; /* green */
+}
+
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+.toggle-switch .slider.round {
+  border-radius: 20px;
+}
+
+.toggle-switch .slider.round:before {
+  border-radius: 50%;
+}
 .summary-textarea:focus {
   outline: none;
   border-color: var(--color-primary);
@@ -828,6 +915,83 @@ async function startDownloadZip() {
 .help-text {
   font-size: 0.8rem;
   color: var(--color-text-muted);
+}
+
+.signature-preview {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-background);
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  width: 100%;
+}
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: var(--space-4);
+}
+.signature-controls {
+  display: flex;
+  gap: var(--space-4);
+  background: white;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+.control-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.control-item label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.control-item input[type="range"] {
+  width: 100px;
+}
+
+.preview-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: var(--space-3);
+  font-family: 'Times New Roman', Times, serif;
+  color: #000;
+  background: white;
+  padding: 1rem 2rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+.preview-role {
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.preview-image {
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.preview-image img {
+  max-height: 100%;
+  object-fit: contain;
+}
+.preview-image-placeholder {
+  height: 60px;
+}
+.preview-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 4px;
 }
 
 /* ── Modal Footer ── */

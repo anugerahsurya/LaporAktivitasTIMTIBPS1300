@@ -175,26 +175,7 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
 
   y += infoHeight + 8
 
-  const drawFooter = (data) => {
-    const footerColor = hexToRgb(config.colors.light.primary)
-    doc.setFillColor(footerColor.r, footerColor.g, footerColor.b)
-    
-    doc.rect(0, pageHeight - 12, pageWidth, 12, 'F')
-    
-    const lightFooter = hexToRgb(config.colors.light.primaryLight)
-    doc.setFillColor(lightFooter.r, lightFooter.g, lightFooter.b)
-    doc.rect(0, pageHeight - 15, pageWidth, 3, 'F')
-
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
-    doc.setTextColor(255, 255, 255)
-    doc.text(
-      `Dicetak otomatis oleh Sistem Lapor Aktivitas TI | Halaman ${data.pageNumber}`,
-      pageWidth / 2,
-      pageHeight - 5,
-      { align: 'center' }
-    )
-  }
+  // Footer drawing logic will be applied at the end for all pages
 
   // Kegiatan Minggu Lalu
   const groupedActivities = groupActivitiesForPrev(prevActivities || [])
@@ -250,8 +231,7 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
       2: { cellWidth: 45 },
       3: { cellWidth: 30 },
     },
-    margin: { left: margin, right: margin },
-    didDrawPage: drawFooter,
+    margin: { left: margin, right: margin }
   })
 
   y = doc.lastAutoTable.finalY + 12
@@ -293,8 +273,7 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
       2: { cellWidth: 45 },
       3: { cellWidth: 30 },
     },
-    margin: { left: margin, right: margin },
-    didDrawPage: drawFooter,
+    margin: { left: margin, right: margin }
   })
   y = doc.lastAutoTable.finalY + 12
 
@@ -405,8 +384,9 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
     
     const roleLines = doc.splitTextToSize(signatureParams.role, sigWidth)
     
-    let targetW = 64
-    let targetH = 32
+    let baseW = 64
+    let targetW = baseW * (signatureParams.scale || 1)
+    let targetH = 32 * (signatureParams.scale || 1)
     
     try {
       const imgProps = doc.getImageProperties(signatureParams.image)
@@ -423,10 +403,11 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
       sigY += 5
     })
     
-    sigY += 5 // minimal gap before image
+    sigY += 1 // reduced gap before image
     
     try {
-      doc.addImage(signatureParams.image, 'PNG', sigX + (sigWidth / 2) - (targetW / 2), sigY, targetW, targetH)
+      const finalX = sigX + (sigWidth / 2) - (targetW / 2) + ((signatureParams.offsetX || 0) * 0.5)
+      doc.addImage(signatureParams.image, 'PNG', finalX, sigY, targetW, targetH)
     } catch (e) {
       // Ignore
     }
@@ -434,6 +415,31 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
     sigY += targetH + 5 // minimal gap before name
     doc.setFont('times', 'bold')
     doc.text(signatureParams.name, sigX + (sigWidth / 2), sigY, { align: 'center' })
+  }
+
+  // Draw Footer for all pages
+  const totalPages = doc.internal.getNumberOfPages();
+  const footerColor = hexToRgb(config.colors.light.primary);
+  const lightFooter = hexToRgb(config.colors.light.primaryLight);
+  
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    
+    doc.setFillColor(footerColor.r, footerColor.g, footerColor.b)
+    doc.rect(0, pageHeight - 12, pageWidth, 12, 'F')
+    
+    doc.setFillColor(lightFooter.r, lightFooter.g, lightFooter.b)
+    doc.rect(0, pageHeight - 15, pageWidth, 3, 'F')
+    
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.setTextColor(255, 255, 255)
+    doc.text(
+      `Dicetak otomatis oleh Sistem Lapor Aktivitas TI | Halaman ${i}`,
+      pageWidth / 2,
+      pageHeight - 5,
+      { align: 'center' }
+    )
   }
 
   return { doc, displayTeamName }
