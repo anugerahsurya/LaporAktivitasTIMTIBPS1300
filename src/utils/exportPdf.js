@@ -177,24 +177,6 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
 
   // Footer drawing logic will be applied at the end for all pages
 
-  // Kegiatan Minggu Lalu
-  const groupedActivities = groupActivitiesForPrev(prevActivities || [])
-  
-  doc.setFont('times', 'bold')
-  doc.setFontSize(12)
-  doc.setTextColor(headerColor.r, headerColor.g, headerColor.b)
-  doc.text('Kegiatan Minggu Lalu', margin, y)
-  y += 4
-
-  const kegiatanData = groupedActivities.length > 0 
-    ? groupedActivities.map((item, idx) => [
-        idx + 1,
-        item.text,
-        item.contributors.join(', '),
-        item.tim === 'lainnya' ? 'Tim Lainnya' : 'Tim Utama'
-      ])
-    : [['-', 'Belum ada kegiatan minggu lalu yang dilaporkan.', '-', '-']]
-
   const tableStyles = {
     font: 'times',
     fontSize: 9,
@@ -206,8 +188,15 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
     overflow: 'linebreak',
   }
 
-  const headStyles = {
+  const headStylesUtama = {
     fillColor: [headerColor.r, headerColor.g, headerColor.b],
+    textColor: [255, 255, 255],
+    fontStyle: 'bold',
+    halign: 'center',
+  }
+  
+  const headStylesLainnya = {
+    fillColor: [107, 114, 128], // gray-500
     textColor: [255, 255, 255],
     fontStyle: 'bold',
     halign: 'center',
@@ -217,65 +206,82 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
     fillColor: [252, 252, 252]
   }
 
-  autoTable(doc, {
-    startY: y,
-    head: [['No', 'Kegiatan', 'Nama Pegawai', 'Keterangan Tim']],
-    body: kegiatanData,
-    theme: 'grid',
-    styles: tableStyles,
-    headStyles: headStyles,
-    alternateRowStyles: alternateRowStyles,
-    columnStyles: {
-      0: { halign: 'center', cellWidth: 14 },
-      1: { cellWidth: 81 },
-      2: { cellWidth: 45 },
-      3: { cellWidth: 30 },
-    },
-    margin: { left: margin, right: margin }
-  })
+  const columnStyles2 = {
+    0: { halign: 'center', cellWidth: 14 },
+    1: { cellWidth: 156 },
+  }
 
-  y = doc.lastAutoTable.finalY + 12
+  function renderTableSection(docObj, yStart, title, activitiesList, noDataMessage, isTarget) {
+    let currY = yStart;
+    const utama = activitiesList.filter(a => a.tim !== 'lainnya');
+    const lainnya = activitiesList.filter(a => a.tim === 'lainnya');
+
+    if (currY > pageHeight - 40) {
+      docObj.addPage();
+      currY = margin;
+    }
+
+    docObj.setFont('times', 'bold')
+    docObj.setFontSize(12)
+    docObj.setTextColor(headerColor.r, headerColor.g, headerColor.b)
+    docObj.text(title, margin, currY)
+    currY += 4
+    
+    const utamaData = utama.length > 0 
+      ? utama.map((item, idx) => [idx + 1, item.text])
+      : [['-', noDataMessage]];
+      
+    autoTable(docObj, {
+      startY: currY,
+      head: [
+        [{ content: 'A. Utama', colSpan: 2, styles: { fillColor: [headerColor.r, headerColor.g, headerColor.b], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' } }],
+        ['No', isTarget ? 'Target' : 'Kegiatan']
+      ],
+      body: utamaData,
+      theme: 'grid',
+      styles: tableStyles,
+      headStyles: headStylesUtama,
+      alternateRowStyles: alternateRowStyles,
+      columnStyles: columnStyles2,
+      margin: { left: margin, right: margin }
+    })
+    
+    currY = docObj.lastAutoTable.finalY + 8
+
+    // B. Lainnya
+    if (currY > pageHeight - 30) {
+      docObj.addPage();
+      currY = margin;
+    }
+    const lainnyaData = lainnya.length > 0 
+      ? lainnya.map((item, idx) => [idx + 1, item.text])
+      : [['-', 'Belum ada kegiatan.']];
+      
+    autoTable(docObj, {
+      startY: currY,
+      head: [
+        [{ content: 'B. Lainnya', colSpan: 2, styles: { fillColor: [107, 114, 128], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'left' } }],
+        ['No', isTarget ? 'Target' : 'Kegiatan']
+      ],
+      body: lainnyaData,
+      theme: 'grid',
+      styles: tableStyles,
+      headStyles: headStylesLainnya,
+      alternateRowStyles: alternateRowStyles,
+      columnStyles: columnStyles2,
+      margin: { left: margin, right: margin }
+    })
+    
+    return docObj.lastAutoTable.finalY + 12;
+  }
+
+  // Kegiatan Minggu Lalu
+  const groupedActivities = groupActivitiesForPrev(prevActivities || [])
+  y = renderTableSection(doc, y, 'Kegiatan Minggu Lalu', groupedActivities, 'Belum ada kegiatan utama minggu lalu.', false);
 
   // Target Minggu Ini
   const groupedTargets = groupActivities(activities, 'target_minggu_depan')
-  
-  if (y > pageHeight - 40) {
-    doc.addPage()
-    y = margin
-  }
-
-  doc.setFont('times', 'bold')
-  doc.setFontSize(12)
-  doc.setTextColor(headerColor.r, headerColor.g, headerColor.b)
-  doc.text('Rencana Kegiatan Minggu Ini', margin, y)
-  y += 4
-
-  const targetData = groupedTargets.length > 0
-    ? groupedTargets.map((item, idx) => [
-        idx + 1,
-        item.text,
-        item.contributors.join(', '),
-        item.tim === 'lainnya' ? 'Tim Lainnya' : 'Tim Utama'
-      ])
-    : [['-', 'Belum ada rencana kegiatan minggu ini.', '-', '-']]
-
-  autoTable(doc, {
-    startY: y,
-    head: [['No', 'Target', 'Nama Pegawai', 'Keterangan Tim']],
-    body: targetData,
-    theme: 'grid',
-    styles: tableStyles,
-    headStyles: headStyles,
-    alternateRowStyles: alternateRowStyles,
-    columnStyles: {
-      0: { halign: 'center', cellWidth: 14 },
-      1: { cellWidth: 81 },
-      2: { cellWidth: 45 },
-      3: { cellWidth: 30 },
-    },
-    margin: { left: margin, right: margin }
-  })
-  y = doc.lastAutoTable.finalY + 12
+  y = renderTableSection(doc, y, 'Rencana Kegiatan Minggu Ini', groupedTargets, 'Belum ada rencana kegiatan utama minggu ini.', true);
 
   // Summary
   if (summary) {
@@ -348,22 +354,6 @@ async function generatePdfDoc(activities, periodLabel, activityRange, summary, t
     
     y += 6 - (lineHeight * 0.5)
 
-    doc.setFont('times', 'italic')
-    doc.setFontSize(8)
-    doc.setTextColor(120, 120, 120)
-    
-    const disclaimer = '* Disclaimer: Ringkasan narasi di atas di-generate secara otomatis menggunakan teknologi AI (Google Gemini) berdasarkan daftar kegiatan yang ada.'
-    const discLines = doc.splitTextToSize(disclaimer, contentWidth)
-    const discLineHeight = 8 * 0.352778 * 1.3
-    
-    discLines.forEach(line => {
-      if (y > pageHeight - 20) {
-        doc.addPage()
-        y = margin + 10
-      }
-      doc.text(line, margin, y)
-      y += discLineHeight
-    })
     doc.setTextColor(0, 0, 0)
   }
 
