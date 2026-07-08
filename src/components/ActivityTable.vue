@@ -1,7 +1,7 @@
 <template>
   <div class="activity-table">
 
-    <div v-if="teamName" class="team-header">
+    <div v-if="teamName" class="team-header" @click="isOpen = !isOpen" style="cursor: pointer;">
       <div class="team-header__icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -11,75 +11,88 @@
         </svg>
       </div>
       <h3 class="team-header__name">{{ teamName }}</h3>
-    </div>
-
-    <div v-if="activities.length === 0" class="empty-state">
-      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="12" y1="18" x2="12" y2="12"/>
-        <line x1="9" y1="15" x2="15" y2="15"/>
-      </svg>
-      <h3>Belum Ada Laporan</h3>
-      <p>Belum ada target rencana kegiatan yang tercatat untuk periode ini.</p>
-    </div>
-
-    <div v-else class="activity-sections">
-
-      <div class="table-section">
-        <h3 class="section-title section-title--target">Rencana Kegiatan Minggu Ini</h3>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 50px;">No</th>
-                <th>Target</th>
-                <th style="width: 30%;">Nama Pegawai</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(item, idx) in groupedTargets"
-                :key="item.text"
-                class="animate-fade-in-up"
-                :style="{ animationDelay: `${idx * 50}ms` }"
-              >
-                <td class="cell-no">{{ idx + 1 }}</td>
-                <td class="cell-target">
-                  <div class="target-text">{{ item.text }}</div>
-                </td>
-                <td class="cell-kontributor">
-                  <div class="kontributor-chips">
-                    <span
-                      v-for="name in item.contributors"
-                      :key="name"
-                      class="kontributor-chip"
-                    >
-                      {{ name }}
-                    </span>
-                  </div>
-                </td>
-              </tr>
-              <tr v-if="groupedTargets.length === 0">
-                <td colspan="3" class="empty-state-row">
-                  <div class="empty-state-cell">Belum ada rencana kegiatan minggu ini yang dilaporkan.</div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      
+      <!-- Dropdown Chevron Arrow -->
+      <div class="team-header__chevron" :class="{ 'team-header__chevron--open': isOpen }">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
       </div>
     </div>
+
+    <Transition name="fade">
+      <div v-show="isOpen" class="team-table-content">
+        <div v-if="activities.length === 0" class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          <h3>Belum Ada Laporan</h3>
+          <p>Belum ada target rencana kegiatan yang tercatat untuk periode ini.</p>
+        </div>
+
+        <div v-else class="activity-sections">
+
+          <div class="table-section">
+            <h3 class="section-title section-title--target">Rencana Kegiatan Minggu Ini</h3>
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">No</th>
+                    <th>Target</th>
+                    <th style="width: 30%;">Nama Pegawai</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(item, idx) in groupedTargets"
+                    :key="item.text"
+                    class="animate-fade-in-up"
+                    :style="{ animationDelay: `${idx * 50}ms` }"
+                  >
+                    <td class="cell-no">{{ idx + 1 }}</td>
+                    <td class="cell-target">
+                      <div class="target-text">{{ item.text }}</div>
+                    </td>
+                    <td class="cell-kontributor">
+                      <div class="kontributor-chips">
+                        <span
+                          v-for="name in item.contributors"
+                          :key="name"
+                          class="kontributor-chip"
+                        >
+                          {{ name }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="groupedTargets.length === 0">
+                    <td colspan="3" class="empty-state-row">
+                      <div class="empty-state-cell">Belum ada rencana kegiatan minggu ini yang dilaporkan.</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   activities: { type: Array, default: () => [] },
   teamName: { type: String, default: '' },
 })
+
+const isOpen = ref(false)
 
 const groupedTargets = computed(() => {
   const map = new Map()
@@ -242,5 +255,41 @@ table {
   .team-header__name {
     font-size: var(--font-size-sm);
   }
+}
+
+.team-header {
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+}
+
+.team-header:hover {
+  background: var(--color-primary-light) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.team-header__chevron {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  transition: transform var(--transition-normal);
+}
+
+.team-header__chevron--open {
+  transform: rotate(180deg);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>

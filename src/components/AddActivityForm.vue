@@ -118,7 +118,7 @@
                 placeholder="Misal: Sakit, Dinas Luar, Mengikuti Diklat, dll..."
                 maxlength="200"
               />
-              <p class="form-help-text">Masukkan keterangan atau alasan izin Anda secara singkat.</p>
+              <p class="form-help-text">Masukkan keterangan atau alasan izin Anda secara singkat. <strong>Catatan: Keterangan ini hanya dapat dilihat oleh Ketua Tim.</strong></p>
             </div>
           </Transition>
 
