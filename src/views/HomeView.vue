@@ -49,7 +49,7 @@
     </div>
 
 
-    <EmployeeStatus :activities="activities" />
+    <EmployeeStatus :activities="activities" :user-role="userRole" />
 
 
     <div v-if="loading" class="loading-container">
@@ -126,11 +126,12 @@ const {
   goToCurrentPeriod,
 } = usePeriod()
 
-const { getActivities, loading } = useApi()
+const { getActivities, loading, verifyNip } = useApi()
 
 const activities = ref([])
 const prevActivities = ref([])
 const toast = ref({ show: false, message: '', type: 'success' })
+const userRole = ref('')
 
 const teams = config.teams || []
 
@@ -192,6 +193,16 @@ onMounted(() => {
     showToast('Kegiatan berhasil diperbarui!', 'success')
   }
   loadActivities()
+
+  // Verify NIP if saved to identify if the logged-in user is Ketua Tim
+  const savedNip = localStorage.getItem('user_nip')
+  if (savedNip) {
+    verifyNip(savedNip).then(res => {
+      if (res.success) {
+        userRole.value = res.employee.role
+      }
+    }).catch(e => console.error(e))
+  }
 })
 
 watch(periodISO, () => {

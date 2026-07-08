@@ -69,59 +69,171 @@
           <p class="step-desc">Pilih kegiatan yang ingin ditampilkan dalam laporan. Beberapa kegiatan rutin dapat dihilangkan jika tidak perlu dilaporkan.</p>
           
           <div v-for="team in teamsWithData" :key="team.id" class="team-section">
-            <h4>Tim: {{ team.name }}</h4>
+            <div class="team-header-bar">
+              <span class="team-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </span>
+              <h4>Tim: {{ team.name }}</h4>
+            </div>
             
-            <div v-if="team.prevActivities.length > 0" class="mb-4">
-              <h5>Kegiatan Minggu Lalu</h5>
-              <div class="table-responsive">
-                <table class="compact-table">
-                  <thead>
-                    <tr>
-                      <th style="width: 60px; text-align: center;">Status</th>
-                      <th style="width: 150px;">Nama Pegawai</th>
-                      <th>Kegiatan</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="act in team.prevActivities" :key="act._ui_id" @click="selectedActivities[act._ui_id] = !selectedActivities[act._ui_id]">
-                      <td style="text-align: center;">
-                        <label class="toggle-switch" @click.stop>
-                          <input type="checkbox" v-model="selectedActivities[act._ui_id]" />
-                          <span class="slider round"></span>
-                        </label>
-                      </td>
-                      <td><span class="act-person">{{ act.contributors.join(', ') }}</span></td>
-                      <td><span class="act-name">{{ act.text }}</span></td>
-                    </tr>
-                  </tbody>
-                </table>
+            <!-- A. Kegiatan Minggu Lalu -->
+            <div v-if="team.prevActivities.length > 0" class="activity-section">
+              <div class="activity-section-header">
+                <div class="section-title-wrapper">
+                  <span class="section-badge section-badge--prev">Lalu</span>
+                  <h5>Kegiatan Minggu Lalu (Evaluasi)</h5>
+                  <span class="count-badge">
+                    {{ getSelectedCount(team.prevActivities) }}/{{ team.prevActivities.length }}
+                  </span>
+                </div>
+                <div class="bulk-actions">
+                  <button type="button" class="btn-bulk" @click="toggleSelectAll(team.prevActivities, true)">
+                    Pilih Semua
+                  </button>
+                  <button type="button" class="btn-bulk btn-bulk--clear" @click="toggleSelectAll(team.prevActivities, false)">
+                    Hapus Pilihan
+                  </button>
+                </div>
+              </div>
+              
+              <div class="activity-list-container">
+                <div 
+                  v-for="act in team.prevActivities" 
+                  :key="act._ui_id"
+                  class="activity-card"
+                  :class="{ 
+                    'activity-card--active': selectedActivities[act._ui_id],
+                    'activity-card--disabled': !selectedActivities[act._ui_id]
+                  }"
+                  @click="toggleRowSelect(act._ui_id)"
+                >
+                  <div class="activity-card__select" @click.stop>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" v-model="selectedActivities[act._ui_id]" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                  
+                  <div class="activity-card__contributors">
+                    <div class="avatar-stack">
+                      <span 
+                        v-for="name in act.contributors" 
+                        :key="name"
+                        class="contributor-avatar-chip"
+                        :style="{ backgroundColor: getAvatarColor(name) }"
+                      >
+                        {{ getInitials(name) }}
+                        <span class="tooltip-text">{{ name }}</span>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="activity-card__editor" @click.stop>
+                    <textarea
+                      v-model="act.text"
+                      class="activity-editor-textarea"
+                      rows="1"
+                      @input="autoGrowTextarea"
+                      placeholder="Ketik kegiatan di sini..."
+                      :disabled="!selectedActivities[act._ui_id]"
+                    ></textarea>
+                    <button 
+                      type="button"
+                      class="activity-card__edit-btn" 
+                      v-if="selectedActivities[act._ui_id]"
+                      @click="focusTextarea"
+                      title="Edit"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div v-if="team.activities.length > 0" class="mb-4">
-              <h5>Rencana Minggu Ini</h5>
-              <div class="table-responsive">
-                <table class="compact-table">
-                  <thead>
-                    <tr>
-                      <th style="width: 60px; text-align: center;">Status</th>
-                      <th style="width: 150px;">Nama Pegawai</th>
-                      <th>Rencana / Target</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="act in team.activities" :key="act._ui_id" @click="selectedActivities[act._ui_id] = !selectedActivities[act._ui_id]">
-                      <td style="text-align: center;">
-                        <label class="toggle-switch" @click.stop>
-                          <input type="checkbox" v-model="selectedActivities[act._ui_id]" />
-                          <span class="slider round"></span>
-                        </label>
-                      </td>
-                      <td><span class="act-person">{{ act.contributors.join(', ') }}</span></td>
-                      <td><span class="act-name">{{ act.text }}</span></td>
-                    </tr>
-                  </tbody>
-                </table>
+            <!-- B. Rencana Minggu Ini -->
+            <div v-if="team.activities.length > 0" class="activity-section">
+              <div class="activity-section-header">
+                <div class="section-title-wrapper">
+                  <span class="section-badge section-badge--curr">Ini</span>
+                  <h5>Rencana Minggu Ini (Target)</h5>
+                  <span class="count-badge">
+                    {{ getSelectedCount(team.activities) }}/{{ team.activities.length }}
+                  </span>
+                </div>
+                <div class="bulk-actions">
+                  <button type="button" class="btn-bulk" @click="toggleSelectAll(team.activities, true)">
+                    Pilih Semua
+                  </button>
+                  <button type="button" class="btn-bulk btn-bulk--clear" @click="toggleSelectAll(team.activities, false)">
+                    Hapus Pilihan
+                  </button>
+                </div>
+              </div>
+              
+              <div class="activity-list-container">
+                <div 
+                  v-for="act in team.activities" 
+                  :key="act._ui_id"
+                  class="activity-card"
+                  :class="{ 
+                    'activity-card--active': selectedActivities[act._ui_id],
+                    'activity-card--disabled': !selectedActivities[act._ui_id]
+                  }"
+                  @click="toggleRowSelect(act._ui_id)"
+                >
+                  <div class="activity-card__select" @click.stop>
+                    <label class="custom-checkbox">
+                      <input type="checkbox" v-model="selectedActivities[act._ui_id]" />
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                  
+                  <div class="activity-card__contributors">
+                    <div class="avatar-stack">
+                      <span 
+                        v-for="name in act.contributors" 
+                        :key="name"
+                        class="contributor-avatar-chip"
+                        :style="{ backgroundColor: getAvatarColor(name) }"
+                      >
+                        {{ getInitials(name) }}
+                        <span class="tooltip-text">{{ name }}</span>
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="activity-card__editor" @click.stop>
+                    <textarea
+                      v-model="act.text"
+                      class="activity-editor-textarea"
+                      rows="1"
+                      @input="autoGrowTextarea"
+                      placeholder="Ketik rencana di sini..."
+                      :disabled="!selectedActivities[act._ui_id]"
+                    ></textarea>
+                    <button 
+                      type="button"
+                      class="activity-card__edit-btn" 
+                      v-if="selectedActivities[act._ui_id]"
+                      @click="focusTextarea"
+                      title="Edit"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -260,7 +372,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import JSZip from 'jszip'
 import { exportToExcelBlob } from '../utils/exportExcel'
 import { exportToPdfBlob } from '../utils/exportPdf'
@@ -288,7 +400,7 @@ const totalSteps = ref(0)
 const progressPercent = ref(0)
 const nipInputRef = ref(null)
 
-const { generateSummary, verifyNip } = useApi()
+const { generateSummary, verifyNip, updateActivityTexts } = useApi()
 const verifiedEmployee = ref(null)
 const verifiedName = ref('')
 
@@ -410,10 +522,16 @@ async function verifyNipInput() {
           let key = act[keyField] ? act[keyField].trim() : ''
           if (!key) key = '- (Belum mengisi)'
           if (!map.has(key)) {
-            map.set(key, { _ui_id: 'grp_' + Math.random().toString(36).substr(2,9), text: key, contributors: [act.pegawai_nama] })
+            map.set(key, { 
+              _ui_id: 'grp_' + Math.random().toString(36).substr(2,9), 
+              text: key, 
+              contributors: [act.pegawai_nama],
+              rawItems: []
+            })
           } else if (!map.get(key).contributors.includes(act.pegawai_nama)) {
             map.get(key).contributors.push(act.pegawai_nama)
           }
+          map.get(key).rawItems.push(act)
         })
         return Array.from(map.values())
       }
@@ -423,10 +541,16 @@ async function verifyNipInput() {
         acts.forEach(act => {
           let key = act.kegiatan ? act.kegiatan.trim() : (act.target_minggu_depan ? act.target_minggu_depan.trim() : '- (Belum mengisi)')
           if (!map.has(key)) {
-            map.set(key, { _ui_id: 'grp_' + Math.random().toString(36).substr(2,9), text: key, contributors: [act.pegawai_nama] })
+            map.set(key, { 
+              _ui_id: 'grp_' + Math.random().toString(36).substr(2,9), 
+              text: key, 
+              contributors: [act.pegawai_nama],
+              rawItems: []
+            })
           } else if (!map.get(key).contributors.includes(act.pegawai_nama)) {
             map.get(key).contributors.push(act.pegawai_nama)
           }
+          map.get(key).rawItems.push(act)
         })
         return Array.from(map.values())
       }
@@ -471,6 +595,39 @@ async function verifyNipInput() {
 
 async function nextStep() {
   if (wizardStep.value === 1) {
+    // Save changes to database before generating AI summary
+    const updates = []
+    teamsWithData.value.forEach(team => {
+      team.activities.forEach(a => {
+        a.rawItems.forEach(item => {
+          updates.push({
+            id: item.id,
+            text: a.text,
+            field: 'target_minggu_depan'
+          })
+        })
+      })
+      
+      team.prevActivities.forEach(a => {
+        a.rawItems.forEach(item => {
+          updates.push({
+            id: item.id,
+            text: a.text,
+            field: item.kegiatan ? 'kegiatan' : 'target_minggu_depan'
+          })
+        })
+      })
+    })
+
+    if (updates.length > 0) {
+      isGeneratingSummary.value = true
+      try {
+        await updateActivityTexts(updates)
+      } catch (err) {
+        console.error('Gagal memperbarui kegiatan di database:', err)
+      }
+    }
+
     wizardStep.value = 2
     await generateAIForTeams()
   } else if (wizardStep.value === 2) {
@@ -493,17 +650,30 @@ function prevStep() {
 async function generateAIForTeams() {
   isGeneratingSummary.value = true
   for (const team of teamsWithData.value) {
-    const selectedActTexts = team.activities.filter(a => selectedActivities.value[a._ui_id]).map(a => a.text)
-    const selectedPrevTexts = team.prevActivities.filter(a => selectedActivities.value[a._ui_id]).map(a => a.text)
-    
-    const filteredActs = team.rawActs.filter(act => {
-      let key = act.target_minggu_depan ? act.target_minggu_depan.trim() : '- (Belum mengisi)'
-      return selectedActTexts.includes(key)
+    const filteredActs = []
+    team.activities.forEach(a => {
+      if (selectedActivities.value[a._ui_id]) {
+        a.rawItems.forEach(item => {
+          item.target_minggu_depan = a.text
+          filteredActs.push(item)
+        })
+      }
     })
-    
-    const filteredPrevActs = team.rawPrevActs.filter(act => {
-      let key = act.kegiatan ? act.kegiatan.trim() : (act.target_minggu_depan ? act.target_minggu_depan.trim() : '- (Belum mengisi)')
-      return selectedPrevTexts.includes(key)
+
+    const filteredPrevActs = []
+    team.prevActivities.forEach(a => {
+      if (selectedActivities.value[a._ui_id]) {
+        a.rawItems.forEach(item => {
+          if (item.kegiatan) {
+            item.kegiatan = a.text
+          } else if (item.target_minggu_depan) {
+            item.target_minggu_depan = a.text
+          } else {
+            item.kegiatan = a.text
+          }
+          filteredPrevActs.push(item)
+        })
+      }
     })
     
     try {
@@ -540,17 +710,30 @@ async function startDownloadZip() {
   }
 
   const teamPromises = teamsWithData.value.map(async (team) => {
-    const selectedActTexts = team.activities.filter(a => selectedActivities.value[a._ui_id]).map(a => a.text)
-    const selectedPrevTexts = team.prevActivities.filter(a => selectedActivities.value[a._ui_id]).map(a => a.text)
-    
-    const filteredActs = team.rawActs.filter(act => {
-      let key = act.target_minggu_depan ? act.target_minggu_depan.trim() : '- (Belum mengisi)'
-      return selectedActTexts.includes(key)
+    const filteredActs = []
+    team.activities.forEach(a => {
+      if (selectedActivities.value[a._ui_id]) {
+        a.rawItems.forEach(item => {
+          item.target_minggu_depan = a.text
+          filteredActs.push(item)
+        })
+      }
     })
-    
-    const filteredPrevActs = team.rawPrevActs.filter(act => {
-      let key = act.kegiatan ? act.kegiatan.trim() : (act.target_minggu_depan ? act.target_minggu_depan.trim() : '- (Belum mengisi)')
-      return selectedPrevTexts.includes(key)
+
+    const filteredPrevActs = []
+    team.prevActivities.forEach(a => {
+      if (selectedActivities.value[a._ui_id]) {
+        a.rawItems.forEach(item => {
+          if (item.kegiatan) {
+            item.kegiatan = a.text
+          } else if (item.target_minggu_depan) {
+            item.target_minggu_depan = a.text
+          } else {
+            item.kegiatan = a.text
+          }
+          filteredPrevActs.push(item)
+        })
+      }
     })
 
     // 1. Generate Excel
@@ -603,6 +786,75 @@ async function startDownloadZip() {
 
   isExporting.value = false
 }
+
+// ── Redesign Helpers ──
+function getInitials(name) {
+  if (!name) return ''
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return parts[0].substring(0, 2).toUpperCase()
+}
+
+function getAvatarColor(name) {
+  const colors = [
+    '#f79039', // primary
+    '#10b981', // green
+    '#3b82f6', // blue
+    '#8b5cf6', // purple
+    '#ec4899', // pink
+    '#06b6d4', // cyan
+    '#f59e0b', // amber
+    '#14b8a6', // teal
+  ]
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  const idx = Math.abs(hash) % colors.length
+  return colors[idx]
+}
+
+function toggleSelectAll(list, state) {
+  list.forEach(a => {
+    selectedActivities.value[a._ui_id] = state
+  })
+}
+
+function getSelectedCount(list) {
+  return list.filter(a => selectedActivities.value[a._ui_id]).length
+}
+
+function toggleRowSelect(id) {
+  selectedActivities.value[id] = !selectedActivities.value[id]
+}
+
+function autoGrowTextarea(e) {
+  const el = e.target
+  el.style.height = 'auto'
+  el.style.height = el.scrollHeight + 'px'
+}
+
+function focusTextarea(e) {
+  const btn = e.currentTarget
+  const textarea = btn.parentElement.querySelector('.activity-editor-textarea')
+  if (textarea) {
+    textarea.focus()
+  }
+}
+
+watch(wizardStep, (newStep) => {
+  if (newStep === 1) {
+    nextTick(() => {
+      const textareas = document.querySelectorAll('.activity-editor-textarea')
+      textareas.forEach(ta => {
+        ta.style.height = 'auto'
+        ta.style.height = ta.scrollHeight + 'px'
+      })
+    })
+  }
+})
 </script>
 
 <style scoped>
@@ -1103,5 +1355,350 @@ async function startDownloadZip() {
   color: var(--color-text-muted, #94a3b8);
   margin: 0;
   font-weight: 500;
+}
+
+/* ── Redesigned Step 1 Elements ── */
+.team-header-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--color-border-light);
+}
+
+.team-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.team-header-bar h4 {
+  margin: 0 !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  font-size: var(--font-size-md) !important;
+}
+
+.activity-section {
+  margin-bottom: var(--space-6);
+}
+
+.activity-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.section-title-wrapper h5 {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.section-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+}
+
+.section-badge--prev {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.section-badge--curr {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-border-light);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.bulk-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.btn-bulk {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-bulk:hover {
+  background: var(--color-primary-light);
+}
+
+.btn-bulk--clear {
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.btn-bulk--clear:hover {
+  background: var(--color-border-light);
+  color: var(--color-text);
+}
+
+.activity-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+  position: relative;
+}
+
+.activity-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.activity-card--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-lighter);
+}
+
+.activity-card--disabled {
+  opacity: 0.7;
+  background: var(--color-border-light);
+}
+
+.activity-card__select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+/* Custom Checkbox */
+.custom-checkbox {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.custom-checkbox:hover input ~ .checkmark {
+  border-color: var(--color-primary);
+}
+
+.custom-checkbox input:checked ~ .checkmark {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.custom-checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.custom-checkbox .checkmark:after {
+  left: 5px;
+  top: 1px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.activity-card__contributors {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 80px;
+  max-width: 120px;
+  padding-top: 2px;
+}
+
+.avatar-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.contributor-avatar-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1.5px solid var(--color-surface);
+  cursor: default;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.contributor-avatar-chip .tooltip-text {
+  visibility: hidden;
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-text);
+  color: white;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  white-space: nowrap;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+}
+
+.contributor-avatar-chip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.activity-card__editor {
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+.activity-editor-textarea {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 6px 42px 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  resize: none;
+  line-height: 1.5;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.activity-editor-textarea:hover:not(:disabled) {
+  background: var(--color-border-light);
+  border-color: var(--color-border);
+}
+
+.activity-editor-textarea:focus:not(:disabled) {
+  outline: none;
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(247, 144, 57, 0.15);
+}
+
+.activity-card__edit-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border-light);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  opacity: 0.5;
+  padding: 0;
+}
+
+.activity-card:hover .activity-card__edit-btn {
+  opacity: 1;
+  background: var(--color-surface);
+  border-color: var(--color-text-muted);
+  color: var(--color-primary);
+}
+
+.activity-card__edit-btn:hover {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: white !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.activity-editor-textarea:focus ~ .activity-card__edit-btn {
+  opacity: 1;
+  background: var(--color-success-light);
+  border-color: var(--color-success);
+  color: var(--color-success);
 }
 </style>

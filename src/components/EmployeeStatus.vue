@@ -40,7 +40,7 @@
           'employee-chip--permission': emp.kehadiran === 'Izin',
           'employee-chip--unmarked': emp.kehadiran === ''
         }"
-        :title="emp.kehadiran === 'Hadir' ? `${emp.name} (Hadir)` : (emp.kehadiran === 'Cuti' ? `${emp.name} (Cuti)` : (emp.kehadiran === 'Izin' ? `${emp.name} (Izin)` : `${emp.name} (Tanpa Keterangan)`))"
+        :title="emp.kehadiran === 'Hadir' ? `${emp.name} (Hadir)` : (emp.kehadiran === 'Cuti' ? `${emp.name} (Cuti)` : (emp.kehadiran === 'Izin' ? `${emp.name} (Izin${userRole === 'Ketua Tim' && emp.keterangan ? ': ' + emp.keterangan : ''})` : `${emp.name} (Tanpa Keterangan)`))"
       >
         <span class="employee-chip__indicator"></span>
         <span class="employee-chip__name">{{ emp.name }}</span>
@@ -66,6 +66,25 @@
         </svg>
       </div>
     </div>
+    
+    <!-- Detail Keterangan Izin (Hanya untuk Ketua Tim) -->
+    <div v-if="userRole === 'Ketua Tim' && permissionDetails.length > 0" class="permission-details-section">
+      <div class="permission-details-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <h5>Detail Keterangan Izin Pegawai</h5>
+      </div>
+      <div class="permission-details-list">
+        <div v-for="emp in permissionDetails" :key="emp.id" class="permission-detail-item">
+          <span class="permission-detail-name">{{ emp.name }}</span>
+          <span class="permission-detail-divider">:</span>
+          <span class="permission-detail-desc">{{ emp.keterangan }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -75,10 +94,12 @@ import { config } from '../config'
 
 const props = defineProps({
   activities: { type: Array, default: () => [] },
+  userRole: { type: String, default: '' },
 })
 
 const statusList = computed(() => {
   const attendanceMap = {}
+  const keteranganMap = {}
   const filledIds = new Set()
 
   props.activities.forEach(act => {
@@ -87,6 +108,9 @@ const statusList = computed(() => {
     if (act.kehadiran) {
       attendanceMap[empId] = act.kehadiran
     }
+    if (act.keterangan_kehadiran) {
+      keteranganMap[empId] = act.keterangan_kehadiran
+    }
   })
 
   return config.employees.map(emp => {
@@ -94,6 +118,7 @@ const statusList = computed(() => {
     const filled = filledIds.has(empId)
     // Default to 'Hadir' if filled but no kehadiran value is recorded
     const kehadiran = filled ? (attendanceMap[empId] || 'Hadir') : ''
+    const keterangan = filled ? (keteranganMap[empId] || '') : ''
     
     return {
       id: emp.id,
@@ -101,8 +126,13 @@ const statusList = computed(() => {
       role: emp.role,
       filled,
       kehadiran,
+      keterangan,
     }
   })
+})
+
+const permissionDetails = computed(() => {
+  return statusList.value.filter(emp => emp.kehadiran === 'Izin' && emp.keterangan)
 })
 
 const unfilledCount = computed(() => {
@@ -249,5 +279,57 @@ const unfilledCount = computed(() => {
 
 .employee-chip--unmarked .employee-chip__indicator {
   background: var(--color-text-muted);
+}
+
+/* Permission details styling for Ketua Tim */
+.permission-details-section {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--color-border);
+}
+
+.permission-details-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: #1d4ed8;
+}
+
+.permission-details-header h5 {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.permission-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.permission-detail-item {
+  display: flex;
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.permission-detail-name {
+  font-weight: 600;
+  color: var(--color-text);
+  min-width: 140px;
+  max-width: 180px;
+}
+
+.permission-detail-divider {
+  margin: 0 var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.permission-detail-desc {
+  color: var(--color-text-secondary);
+  font-style: italic;
 }
 </style>

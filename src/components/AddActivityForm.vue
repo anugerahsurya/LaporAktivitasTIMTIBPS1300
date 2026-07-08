@@ -106,6 +106,22 @@
             </div>
           </div>
 
+          <!-- Input Keterangan Izin -->
+          <Transition name="fade-height">
+            <div v-if="attendance === 'Izin'" class="form-group mb-8 permission-reason-group">
+              <label class="form-label" for="permission-reason">Keterangan Izin</label>
+              <input
+                id="permission-reason"
+                class="form-input"
+                type="text"
+                v-model="permissionReason"
+                placeholder="Misal: Sakit, Dinas Luar, Mengikuti Diklat, dll..."
+                maxlength="200"
+              />
+              <p class="form-help-text">Masukkan keterangan atau alasan izin Anda secara singkat.</p>
+            </div>
+          </Transition>
+
           <div class="section-container">
             <h3 class="section-title section-title--target">
               <div class="section-icon-box section-icon-box--target">
@@ -303,6 +319,7 @@ const verifiedEmployeeData = ref(null)
 const loadingExisting = ref(false)
 const existingIds = ref([])
 const attendance = ref('Hadir')
+const permissionReason = ref('')
 const teams = config.teams || []
 const submitting = ref(false)
 const showErrors = ref(false)
@@ -327,6 +344,11 @@ async function loadExistingActivities() {
       // Load Kehadiran
       if (myActs[0].kehadiran) {
         attendance.value = myActs[0].kehadiran
+      }
+      if (myActs[0].keterangan_kehadiran) {
+        permissionReason.value = myActs[0].keterangan_kehadiran
+      } else {
+        permissionReason.value = ''
       }
       // Load Targets
       futureTargets.length = 0
@@ -415,6 +437,7 @@ function handleLogout() {
   existingIds.value = []
   
   attendance.value = 'Hadir'
+  permissionReason.value = ''
   futureTargets.length = 0
   futureTargets.push({ text: '', warning: '', suggestions: [], tim: '' })
 }
@@ -541,6 +564,7 @@ async function handleSubmit() {
       pegawai_nama: verifiedEmployeeData.value?.name || '',
       activities: finalActivities,
       kehadiran: attendance.value,
+      keterangan_kehadiran: attendance.value === 'Izin' ? permissionReason.value.trim() : '',
     }
 
     emit('submit', data, isEditMode.value, (success) => {
@@ -1125,5 +1149,21 @@ async function handleSubmit() {
   border-top-color: var(--color-primary);
   width: 24px;
   height: 24px;
+}
+
+/* fade-height transition for leave reason */
+.fade-height-enter-active,
+.fade-height-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 120px;
+  overflow: hidden;
+}
+
+.fade-height-enter-from,
+.fade-height-leave-to {
+  opacity: 0;
+  max-height: 0;
+  margin-bottom: 0 !important;
+  transform: translateY(-10px);
 }
 </style>

@@ -70,7 +70,8 @@ export function useApi() {
           pegawai_nama: activityData.pegawai_nama,
           created_at: new Date().toISOString(),
           kehadiran: activityData.kehadiran || '',
-          tim: act.tim || ''
+          tim: act.tim || '',
+          keterangan_kehadiran: activityData.keterangan_kehadiran || ''
         }))
         all.push(...newActivities)
         setLocalData('activities', all)
@@ -273,6 +274,45 @@ Instruksi spesifik:
     }
   }
 
+  async function updateActivityTexts(updates) {
+    loading.value = true
+    error.value = null
+    try {
+      if (isConnected) {
+        const res = await fetch(config.apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action: 'updateActivityTexts',
+            updates,
+          }),
+        })
+        const data = await res.json()
+        loading.value = false
+        return data
+      } else {
+        const all = getLocalData('activities') || []
+        updates.forEach(upd => {
+          const matched = all.find(a => String(a.id) === String(upd.id))
+          if (matched) {
+            if (upd.field === 'kegiatan') {
+              matched.kegiatan = upd.text
+            } else {
+              matched.target_minggu_depan = upd.text
+            }
+          }
+        })
+        setLocalData('activities', all)
+        loading.value = false
+        return { success: true }
+      }
+    } catch (e) {
+      error.value = e.message
+      loading.value = false
+      return { success: false, error: e.message }
+    }
+  }
+
   return {
     loading,
     error,
@@ -284,6 +324,7 @@ Instruksi spesifik:
     deleteActivity,
     generateSummary,
     verifyNip,
+    updateActivityTexts,
   }
 }
 
