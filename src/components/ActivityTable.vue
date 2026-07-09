@@ -12,6 +12,12 @@
       </div>
       <h3 class="team-header__name">{{ teamName }}</h3>
       
+      <!-- Interactive Guide / Hint Badge -->
+      <div class="team-header__hint">
+        <span class="hint-text hint-text--desktop">{{ isOpen ? 'Klik untuk menutup detail' : 'Klik untuk melihat kegiatan' }}</span>
+        <span class="hint-text hint-text--mobile">{{ isOpen ? 'Tutup' : 'Lihat' }}</span>
+      </div>
+
       <!-- Dropdown Chevron Arrow -->
       <div class="team-header__chevron" :class="{ 'team-header__chevron--open': isOpen }">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -118,7 +124,7 @@ const groupedTargets = computed(() => {
 
 <style scoped>
 .activity-table {
-  margin-top: var(--space-4);
+  margin-top: 0;
 }
 
 .team-header {
@@ -129,7 +135,15 @@ const groupedTargets = computed(() => {
   background: linear-gradient(135deg, var(--color-primary-lighter), var(--color-primary-light));
   border: 1px solid var(--color-primary-light);
   border-radius: var(--radius-lg);
-  margin-bottom: var(--space-5);
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+}
+
+.team-header:hover {
+  background: var(--color-primary-light) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: var(--shadow-sm);
 }
 
 .team-header__icon {
@@ -149,6 +163,49 @@ const groupedTargets = computed(() => {
   font-weight: 700;
   color: var(--color-primary);
   margin: 0;
+}
+
+.team-header__hint {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  background: rgba(247, 144, 57, 0.08);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.team-header:hover .team-header__hint {
+  background: var(--color-primary);
+  color: white;
+}
+
+.hint-text--desktop {
+  display: inline;
+}
+
+.hint-text--mobile {
+  display: none;
+}
+
+.team-header__chevron {
+  margin-left: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  transition: transform var(--transition-normal);
+}
+
+.team-header__chevron--open {
+  transform: rotate(180deg);
+}
+
+.team-table-content {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .activity-sections {
@@ -239,10 +296,20 @@ table {
   opacity: 0.4;
 }
 
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
 @media (max-width: 768px) {
   .team-header {
     padding: var(--space-3) var(--space-4);
-    margin-bottom: var(--space-4);
     border-radius: var(--radius-md);
     gap: var(--space-2);
   }
@@ -255,41 +322,19 @@ table {
   .team-header__name {
     font-size: var(--font-size-sm);
   }
+
+  .team-table-content {
+    margin-bottom: var(--space-4);
+  }
 }
 
-.team-header {
-  cursor: pointer;
-  user-select: none;
-  transition: all var(--transition-fast);
-}
+@media (max-width: 640px) {
+  .hint-text--desktop {
+    display: none;
+  }
 
-.team-header:hover {
-  background: var(--color-primary-light) !important;
-  border-color: var(--color-primary) !important;
-  box-shadow: var(--shadow-sm);
-}
-
-.team-header__chevron {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-primary);
-  transition: transform var(--transition-normal);
-}
-
-.team-header__chevron--open {
-  transform: rotate(180deg);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
+  .hint-text--mobile {
+    display: inline;
+  }
 }
 </style>

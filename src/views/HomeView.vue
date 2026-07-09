@@ -58,7 +58,7 @@
     </div>
 
 
-    <template v-else>
+    <div v-else class="teams-container">
       <div
         v-for="team in teams"
         :key="team.id"
@@ -69,7 +69,7 @@
           :team-name="team.name"
         />
       </div>
-    </template>
+    </div>
 
 
     <div v-if="activities.length > 0" class="export-section animate-fade-in">
@@ -276,8 +276,14 @@ function showToast(message, type = 'success') {
   font-size: var(--font-size-sm);
 }
 
+.teams-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .team-table-section {
-  margin-top: var(--space-2);
+  margin-top: 0;
 }
 
 .export-section {
