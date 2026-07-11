@@ -19,6 +19,8 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -29,6 +31,8 @@ body {
   background-color: var(--color-background);
   transition: background-color var(--transition-normal), color var(--transition-normal);
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 #app {
@@ -425,5 +429,11 @@ table tbody tr:last-child td {
   table th,
   table td {
     padding: var(--space-2) var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 var(--space-3);
   }
 }

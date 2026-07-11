@@ -319,5 +319,21 @@ function showToast(message, type = 'success') {
   .hero__title {
     font-size: var(--font-size-2xl);
   }
+  
+  .action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+  
+  .action-bar .btn {
+    width: 100%;
+  }
+  
+  .action-bar__info {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
 }
 </style>

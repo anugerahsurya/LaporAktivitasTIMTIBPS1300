@@ -175,7 +175,8 @@ const unfilledCount = computed(() => {
 .status-legend {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   margin-top: 2px;

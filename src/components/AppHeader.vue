@@ -40,7 +40,7 @@
         <div class="preset-dropdown-container">
           <button class="preset-dropdown-btn" @click="isPresetOpen = !isPresetOpen" @blur="closePresetDropdownDelayed">
             <span class="preset-color-indicator" :style="{ backgroundColor: currentPresetColor }"></span>
-            <span>{{ currentPresetName }}</span>
+            <span class="preset-dropdown-label">{{ currentPresetName }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="{ transform: isPresetOpen ? 'rotate(180deg)' : 'rotate(0)' }" style="transition: transform 0.2s;">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
@@ -298,6 +298,49 @@ function closePresetDropdownDelayed() {
   }
   .app-header__title h1 {
     font-size: var(--font-size-base);
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header__inner {
+    padding: 0 var(--space-2);
+    gap: var(--space-2);
+  }
+  
+  .app-header__right {
+    gap: var(--space-2);
+  }
+  
+  .preset-dropdown-label {
+    display: none;
+  }
+  
+  .preset-dropdown-btn {
+    padding: var(--space-2);
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header__logo {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .app-header__logo svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .app-header__brand {
+    gap: 6px;
+  }
+  
+  .app-header__title h1 {
+    font-size: var(--font-size-sm);
+  }
+  
+  .nav-link {
+    padding: var(--space-2);
   }
 }
 </style>
